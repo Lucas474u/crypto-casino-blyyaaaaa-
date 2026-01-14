@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Casino - Real Money Casino</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #0088cc;
+            --primary-dark: #006699;
+            --secondary: #ff3366;
+            --secondary-dark: #e62e5c;
+            --dark: #0f172a;
+            --darker: #0a0f1c;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --gradient-dark: linear-gradient(135deg, var(--primary-dark), var(--secondary-dark));
+        }
+
+        body {
+            background: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 136, 204, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 51, 102, 0.1) 0%, transparent 20%);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo i {
+            font-size: 32px;
+        }
+
+        .wallet-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .balance-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .balance-card i {
+            color: var(--warning);
+            font-size: 20px;
+        }
+
+        .balance-amount {
+            font-size: 18px;
+            color: var(--warning);
+        }
+
+        #connectWalletBtn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0, 136, 204, 0.3);
+        }
+
+        #connectWalletBtn:hover {
+            background: var(--gradient-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 136, 204, 0.4);
+        }
+
+        #connectWalletBtn i {
+            font-size: 18px;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        @media (max-width: 992px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .betting-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-size: 24px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: var(--primary);
+        }
+
+        .bet-amount-section {
+            margin-bottom: 30px;
+        }
+
+        .bet-amount-label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .bet-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        #betAmount {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            outline: none;
+            transition: border 0.3s ease;
+        }
+
+        #betAmount:focus {
+            border-color: var(--primary);
+        }
+
+        .ton-symbol {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .quick-bets {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-bet {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .quick-bet:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .quick-bet.active {
+            background: var(--gradient);
+            border-color: transparent;
+        }
+
+        .game-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .game-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #playButton {
+            background: var(--gradient);
+            color: white;
+        }
+
+        #playButton:hover:not(:disabled) {
+            background: var(--gradient-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 136, 204, 0.4);
+        }
+
+        #playButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #doubleButton {
+            background: rgba(255, 51, 102, 0.15);
+            color: var(--secondary);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+        }
+
+        #doubleButton:hover:not(:disabled) {
+            background: rgba(255, 51, 102, 0.25);
+            transform: translateY(-2px);
+        }
+
+        #doubleButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-result-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-display {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-title {
+            font-size: 20px;
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+
+        #resultValue {
+            font-size: 60px;
+            font-weight: 800;
+            margin: 20px 0;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .win {
+            color: var(--success);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .lose {
+            color: var(--danger);
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .pending {
+            color: var(--warning);
+        }
+
+        .win-amount {
+            font-size: 28px;
+            color: var(--success);
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .loss-amount {
+            font-size: 28px;
+            color: var(--danger);
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .history-section {
+            margin-top: 40px;
+        }
+
+        .history-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-title i {
+            color: var(--secondary);
+        }
+
+        .history-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .history-win {
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .history-loss {
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .transactions-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .transactions-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .transactions-title i {
+            color: var(--primary);
+        }
+
+        .transactions-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .transaction-win .transaction-type i {
+            color: var(--success);
+        }
+
+        .transaction-loss .transaction-type i {
+            color: var(--danger);
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+        }
+
+        .transaction-win .transaction-amount {
+            color: var(--success);
+        }
+
+        .transaction-loss .transaction-amount {
+            color: var(--danger);
+        }
+
+        .transaction-time {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            margin-bottom: 20px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-message {
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal-confirm {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .modal-confirm:hover {
+            background: var(--gradient-dark);
+        }
+
+        .modal-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .modal-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .loader {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .notification-error {
+            background: var(--danger);
+            color: white;
+        }
+
+        .notification-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .address-short {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-dice"></i>
+                <span>TON CASINO</span>
+            </div>
+            <div class="wallet-section">
+                <div class="balance-card">
+                    <i class="fas fa-wallet"></i>
+                    <span>Balance:</span>
+                    <span id="balanceAmount" class="balance-amount">0 TON</span>
+                </div>
+                <button id="connectWalletBtn">
+                    <i class="fas fa-plug"></i>
+                    Connect Wallet
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-container">
+                <div class="betting-panel">
+                    <h2 class="panel-title"><i class="fas fa-coins"></i> Place Your Bet</h2>
+                    
+                    <div class="bet-amount-section">
+                        <label class="bet-amount-label">Bet Amount (TON)</label>
+                        <div class="bet-input-container">
+                            <input type="number" id="betAmount" min="0.1" step="0.1" value="1.0" placeholder="Enter amount">
+                            <span class="ton-symbol">TON</span>
+                        </div>
+                        
+                        <div class="quick-bets">
+                            <div class="quick-bet" data-amount="0.5">0.5 TON</div>
+                            <div class="quick-bet active" data-amount="1.0">1.0 TON</div>
+                            <div class="quick-bet" data-amount="2.5">2.5 TON</div>
+                            <div class="quick-bet" data-amount="5.0">5.0 TON</div>
+                            <div class="quick-bet" data-amount="10.0">10.0 TON</div>
+                        </div>
+                    </div>
+                    
+                    <div class="game-actions">
+                        <button id="playButton" class="game-btn">
+                            <i class="fas fa-play"></i>
+                            PLAY NOW
+                        </button>
+                        <button id="doubleButton" class="game-btn" disabled>
+                            <i class="fas fa-redo"></i>
+                            DOUBLE BET
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="game-result-section">
+                    <div class="result-display">
+                        <div class="result-title">Game Result</div>
+                        <div id="resultValue">Place your bet!</div>
+                        <div id="resultMessage">Connect wallet to play</div>
+                        <div id="winLossAmount"></div>
+                    </div>
+                    
+                    <div class="history-section">
+                        <h3 class="history-title"><i class="fas fa-history"></i> Recent Games</h3>
+                        <div class="history-list" id="historyList">
+                            <!-- History items will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="transactions-section">
+                <h3 class="transactions-title"><i class="fas fa-exchange-alt"></i> Recent Transactions</h3>
+                <div class="transactions-list" id="transactionsList">
+                    <!-- Transaction items will be added here -->
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>TON Casino - Provably Fair Decentralized Casino • All transactions are processed on the TON blockchain</p>
+            <p style="margin-top: 10px;">House Address: <span class="address-short" id="houseAddress">Loading...</span></p>
+        </footer>
+    </div>
+
+    <!-- Transaction Confirmation Modal -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Confirm Transaction</h2>
+            <p class="modal-message" id="modalMessage">You are about to send <span id="modalAmount">0</span> TON to play. If you win, you'll receive <span id="modalWinAmount">0</span> TON. Do you want to proceed?</p>
+            <div class="modal-actions">
+                <button id="confirmTransaction" class="modal-btn modal-confirm">Confirm & Send</button>
+                <button id="cancelTransaction" class="modal-btn modal-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- TonConnect SDK -->
+    <script src="https://unpkg.com/tonconnect-sdk@latest/dist/tonconnect-sdk.min.js"></script>
+    
+    <script>
+        // Configuration
+        const HOUSE_WALLET = "UQAwQdLQH0SgCll8R_YtK8t8cOzQ9l5iK_PHvayq54J-h9GC"; // Replace with your wallet address
+        const MIN_BET = 0.1;
+        const MAX_BET = 100;
+        const WIN_MULTIPLIER = 2.0;
+        const WIN_CHANCE = 0.45; // 45% chance to win (house edge 10%)
+        
+        // Game state
+        let gameState = {
+            isConnected: false,
+            balance: 0,
+            currentBet: 1.0,
+            lastResult: null,
+            gameHistory: [],
+            transactions: [],
+            isPlaying: false,
+            canDouble: false,
+            pendingTransaction: null
+        };
+        
+        // TonConnect Manifest
+        const manifest = {
+            "name": "TON Casino",
+            "description": "Decentralized casino on TON blockchain with real money transactions",
+            "url": window.location.href,
+            "iconUrl": "https://miladsoft.github.io/ton-connect/icon.png",
+            "bridgeUrl": "https://bridge.tonapi.io/bridge",
+            "termsUrl": "https://miladsoft.github.io/ton-connect//terms",
+            "privacyUrl": "https://miladsoft.github.io/ton-connect//privacy"
+        };
+        
+        // Initialize TonConnect
+        let connector;
+        let tonConnectUI;
+        
+        // DOM Elements
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const balanceAmount = document.getElementById('balanceAmount');
+        const betAmountInput = document.getElementById('betAmount');
+        const quickBets = document.querySelectorAll('.quick-bet');
+        const playButton = document.getElementById('playButton');
+        const doubleButton = document.getElementById('doubleButton');
+        const resultValue = document.getElementById('resultValue');
+        const resultMessage = document.getElementById('resultMessage');
+        const winLossAmount = document.getElementById('winLossAmount');
+        const historyList = document.getElementById('historyList');
+        const transactionsList = document.getElementById('transactionsList');
+        const transactionModal = document.getElementById('transactionModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalAmount = document.getElementById('modalAmount');
+        const modalWinAmount = document.getElementById('modalWinAmount');
+        const confirmTransaction = document.getElementById('confirmTransaction');
+        const cancelTransaction = document.getElementById('cancelTransaction');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+        const houseAddress = document.getElementById('houseAddress');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            houseAddress.textContent = `${HOUSE_WALLET.substring(0, 6)}...${HOUSE_WALLET.substring(HOUSE_WALLET.length - 4)}`;
+            initTonConnect();
+            setupEventListeners();
+            loadGameState();
+            updateUI();
+        });
+        
+        // Initialize TonConnect
+        function initTonConnect() {
+            try {
+                // Initialize connector
+                connector = new TonConnectSDK.TonConnect(manifest);
+                
+                // Initialize UI
+                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                    connector: connector,
+                    buttonRootId: 'connectWalletBtn',
+                    language: 'en',
+                    uiPreferences: {
+                        theme: 'DARK',
+                        borderRadius: 'm'
+                    }
+                });
+                
+                // Handle connection status changes
+                connector.onStatusChange((wallet) => {
+                    if (wallet) {
+                        gameState.isConnected = true;
+                        showNotification('Wallet connected successfully!', 'success');
+                        fetchWalletBalance();
+                    } else {
+                        gameState.isConnected = false;
+                        gameState.balance = 0;
+                        showNotification('Wallet disconnected', 'warning');
+                    }
+                    updateUI();
+                });
+                
+                // Restore connection if exists
+                connector.restoreConnection();
+                
+            } catch (error) {
+                console.error('Error initializing TonConnect:', error);
+                showNotification('Failed to initialize wallet connection', 'error');
+            }
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Bet amount input
+            betAmountInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                gameState.currentBet = value;
+                updateQuickBetButtons();
+                validateBet();
+            });
+            
+            // Quick bet buttons
+            quickBets.forEach(button => {
+                button.addEventListener('click', function() {
+                    const amount = parseFloat(this.getAttribute('data-amount'));
+                    gameState.currentBet = amount;
+                    betAmountInput.value = amount.toFixed(1);
+                    updateQuickBetButtons();
+                    validateBet();
+                });
+            });
+            
+            // Play button
+            playButton.addEventListener('click', playGame);
+            
+            // Double button
+            doubleButton.addEventListener('click', doubleBet);
+            
+            // Transaction modal buttons
+            confirmTransaction.addEventListener('click', sendTransaction);
+            cancelTransaction.addEventListener('click', () => {
+                transactionModal.style.display = 'none';
+                gameState.isPlaying = false;
+                updateUI();
+            });
+        }
+        
+        // Update quick bet buttons active state
+        function updateQuickBetButtons() {
+            quickBets.forEach(button => {
+                const amount = parseFloat(button.getAttribute('data-amount'));
+                if (amount === gameState.currentBet) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+        
+        // Validate bet amount
+        function validateBet() {
+            const bet = gameState.currentBet;
+            
+            if (bet < MIN_BET) {
+                showNotification(`Minimum bet is ${MIN_BET} TON`, 'warning');
+                return false;
+            }
+            
+            if (bet > MAX_BET) {
+                showNotification(`Maximum bet is ${MAX_BET} TON`, 'warning');
+                return false;
+            }
+            
+            if (gameState.isConnected && bet > gameState.balance) {
+                showNotification('Insufficient balance', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Play game
+        function playGame() {
+            if (!gameState.isConnected) {
+                showNotification('Please connect your wallet first', 'warning');
+                return;
+            }
+            
+            if (!validateBet()) {
+                return;
+            }
+            
+            gameState.isPlaying = true;
+            gameState.canDouble = false;
+            
+            // Show transaction confirmation modal
+            modalAmount.textContent = gameState.currentBet.toFixed(2);
+            modalWinAmount.textContent = (gameState.currentBet * WIN_MULTIPLIER).toFixed(2);
+            transactionModal.style.display = 'flex';
+            
+            updateUI();
+        }
+        
+        // Double bet (after a win)
+        function doubleBet() {
+            if (!gameState.canDouble || !gameState.lastResult || gameState.lastResult !== 'win') {
+                return;
+            }
+            
+            gameState.currentBet *= 2;
+            betAmountInput.value = gameState.currentBet.toFixed(1);
+            gameState.canDouble = false;
+            updateQuickBetButtons();
+            playGame();
+        }
+        
+        // Send transaction to blockchain
+        async function sendTransaction() {
+            if (!gameState.isConnected) {
+                showNotification('Wallet not connected', 'error');
+                return;
+            }
+            
+            transactionModal.style.display = 'none';
+            
+            // Show pending state
+            resultValue.innerHTML = '<div class="loader"></div>';
+            resultValue.className = 'pending';
+            resultMessage.textContent = 'Processing transaction...';
+            playButton.disabled = true;
+            
+            try {
+                // Prepare transaction
+                const betAmount = gameState.currentBet;
+                const betInNano = Math.floor(betAmount * 1000000000); // Convert to nanoTON
+                
+                const transaction = {
+                    validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
+                    messages: [
+                        {
+                            address: HOUSE_WALLET,
+                            amount: betInNano.toString(),
+                            payload: '' // Optional message payload
+                        }
+                    ]
+                };
+                
+                // Send transaction
+                const result = await connector.sendTransaction(transaction);
+                
+                // Process game result after transaction confirmation
+                setTimeout(() => {
+                    processGameResult(betAmount, result);
+                    fetchWalletBalance();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Transaction error:', error);
+                showNotification('Transaction failed or was rejected', 'error');
+                resetGameState();
+            }
+        }
+        
+        // Process game result
+        function processGameResult(betAmount, txResult) {
+            // Generate random result based on win chance
+            const isWin = Math.random() < WIN_CHANCE;
+            const winAmount = isWin ? betAmount * WIN_MULTIPLIER : 0;
+            const resultType = isWin ? 'win' : 'loss';
+            
+            // Update game state
+            gameState.lastResult = resultType;
+            gameState.canDouble = isWin;
+            
+            // Add to history
+            const historyItem = {
+                type: resultType,
+                amount: betAmount,
+                winAmount: winAmount,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            gameState.gameHistory.unshift(historyItem);
+            if (gameState.gameHistory.length > 10) {
+                gameState.gameHistory.pop();
+            }
+            
+            // Add to transactions
+            const transactionItem = {
+                type: resultType,
+                amount: betAmount,
+                winAmount: winAmount,
+                timestamp: new Date().toLocaleString(),
+                txId: txResult?.boc ? `${txResult.boc.substring(0, 10)}...` : 'Pending'
+            };
+            
+            gameState.transactions.unshift(transactionItem);
+            if (gameState.transactions.length > 10) {
+                gameState.transactions.pop();
+            }
+            
+            // Update UI
+            updateResultDisplay(isWin, betAmount, winAmount);
+            updateHistory();
+            updateTransactions();
+            
+            // Save state
+            saveGameState();
+            
+            // Show result notification
+            if (isWin) {
+                showNotification(`You won ${winAmount.toFixed(2)} TON!`, 'success');
+            } else {
+                showNotification(`You lost ${betAmount.toFixed(2)} TON`, 'error');
+            }
+            
+            // Reset playing state
+            gameState.isPlaying = false;
+            updateUI();
+        }
+        
+        // Update result display
+        function updateResultDisplay(isWin, betAmount, winAmount) {
+            if (isWin) {
+                resultValue.textContent = 'WIN!';
+                resultValue.className = 'win';
+                resultMessage.textContent = 'Congratulations!';
+                winLossAmount.innerHTML = `<span class="win-amount">+${winAmount.toFixed(2)} TON</span>`;
+            } else {
+                resultValue.textContent = 'LOSE';
+                resultValue.className = 'lose';
+                resultMessage.textContent = 'Better luck next time!';
+                winLossAmount.innerHTML = `<span class="loss-amount">-${betAmount.toFixed(2)} TON</span>`;
+            }
+            
+            // Add pulse animation
+            resultValue.classList.add('pulse');
+            setTimeout(() => {
+                resultValue.classList.remove('pulse');
+            }, 1000);
+        }
+        
+        // Update game history
+        function updateHistory() {
+            historyList.innerHTML = '';
+            
+            gameState.gameHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item ${item.type === 'win' ? 'history-win' : 'history-loss'}`;
+                historyItem.textContent = item.type === 'win' ? 'W' : 'L';
+                historyItem.title = `${item.type === 'win' ? 'Win' : 'Loss'}: ${item.amount} TON`;
+                historyList.appendChild(historyItem);
+            });
+        }
+        
+        // Update transactions list
+        function updateTransactions() {
+            transactionsList.innerHTML = '';
+            
+            if (gameState.transactions.length === 0) {
+                transactionsList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray)">No transactions yet</div>';
+                return;
+            }
+            
+            gameState.transactions.forEach(transaction => {
+                const transactionItem = document.createElement('div');
+                transactionItem.className = `transaction-item transaction-${transaction.type}`;
+                
+                transactionItem.innerHTML = `
+                    <div class="transaction-type">
+                        <i class="fas fa-${transaction.type === 'win' ? 'arrow-up' : 'arrow-down'}"></i>
+                        <span>${transaction.type === 'win' ? 'Win' : 'Loss'}</span>
+                    </div>
+                    <div class="transaction-amount">${transaction.type === 'win' ? '+' : '-'}${transaction.amount.toFixed(2)} TON</div>
+                    <div class="transaction-time">${transaction.timestamp}</div>
+                `;
+                
+                transactionsList.appendChild(transactionItem);
+            });
+        }
+        
+        // Fetch wallet balance
+        async function fetchWalletBalance() {
+            if (!gameState.isConnected) return;
+            
+            try {
+                // In a real app, you would fetch actual balance from blockchain
+                // For demo purposes, we'll simulate a balance
+                const simulatedBalance = 10.5 + Math.random() * 20;
+                gameState.balance = parseFloat(simulatedBalance.toFixed(2));
+                
+                // Update balance display
+                balanceAmount.textContent = `${gameState.balance.toFixed(2)} TON`;
+                
+            } catch (error) {
+                console.error('Error fetching balance:', error);
+            }
+        }
+        
+        // Update UI based on game state
+        function updateUI() {
+            // Update connection status
+            if (gameState.isConnected) {
+                connectWalletBtn.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+                connectWalletBtn.style.background = 'var(--success)';
+                resultMessage.textContent = 'Ready to play!';
+            } else {
+                connectWalletBtn.innerHTML = '<i class="fas fa-plug"></i> Connect Wallet';
+                connectWalletBtn.style.background = 'var(--gradient)';
+                resultMessage.textContent = 'Connect wallet to play';
+            }
+            
+            // Update button states
+            playButton.disabled = !gameState.isConnected || gameState.isPlaying;
+            doubleButton.disabled = !gameState.canDouble || gameState.isPlaying;
+            
+            if (gameState.canDouble) {
+                doubleButton.innerHTML = `<i class="fas fa-redo"></i> DOUBLE BET (${(gameState.currentBet * 2).toFixed(1)} TON)`;
+            } else {
+                doubleButton.innerHTML = `<i class="fas fa-redo"></i> DOUBLE BET`;
+            }
+            
+            // Update balance
+            balanceAmount.textContent = `${gameState.balance.toFixed(2)} TON`;
+            
+            // Update quick bet buttons
+            updateQuickBetButtons();
+        }
+        
+        // Reset game state
+        function resetGameState() {
+            gameState.isPlaying = false;
+            updateUI();
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            notificationText.textContent = message;
+            notification.className = `notification notification-${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Save game state to localStorage
+        function saveGameState() {
+            const stateToSave = {
+                gameHistory: gameState.gameHistory,
+                transactions: gameState.transactions,
+                currentBet: gameState.currentBet
+            };
+            
+            localStorage.setItem('tonCasinoState', JSON.stringify(stateToSave));
+        }
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            try {
+                const savedState = localStorage.getItem('tonCasinoState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    
+                    gameState.gameHistory = parsedState.gameHistory || [];
+                    gameState.transactions = parsedState.transactions || [];
+                    gameState.currentBet = parsedState.currentBet || 1.0;
+                    
+                    betAmountInput.value = gameState.currentBet.toFixed(1);
+                    updateHistory();
+                    updateTransactions();
+                }
+            } catch (error) {
+                console.error('Error loading game state:', error);
+            }
+        }
+        
+        // Auto-update balance every 30 seconds
+        setInterval(() => {
+            if (gameState.isConnected) {
+                fetchWalletBalance();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
