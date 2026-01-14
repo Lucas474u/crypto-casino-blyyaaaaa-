@@ -1097,4 +1097,39 @@ body {
     
     .stats-grid {
         grid-template-columns: 1fr;
-   
+    }
+    
+    .rocket {
+        font-size: 50px;
+    }
+    
+    .multiplier-display {
+        font-size: 36px;
+    }
+    
+    .mines-grid {
+        gap: 8px;
+    }
+    
+    .mine-cell {
+        font-size: 20px;
+    }
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--surface-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
