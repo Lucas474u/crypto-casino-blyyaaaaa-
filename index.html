@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Casino | Краш и Мины</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/ton-web/dist/ton-web.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- TON Connect панель -->
+        <div class="wallet-panel">
+            <button id="connect-wallet" class="btn connect-btn">
+                Подключить TON кошелек
+            </button>
+            <div id="wallet-info" class="wallet-info hidden">
+                <span class="wallet-address">Кошелек: <span id="wallet-address"></span></span>
+                <span class="wallet-balance">Баланс: <span id="wallet-balance">0</span> TON</span>
+            </div>
+        </div>
+
+        <!-- Основное меню -->
+        <div class="game-menu">
+            <h1 class="title">🎰 TON Casino</h1>
+            
+            <div class="balance-section">
+                <div class="balance-card">
+                    <h3>Ваш баланс</h3>
+                    <div class="balance-amount" id="user-balance">0 TON</div>
+                </div>
+                
+                <div class="deposit-section">
+                    <input type="number" id="deposit-amount" placeholder="Сумма в TON" min="0.1" step="0.1">
+                    <button id="deposit-btn" class="btn deposit-btn">Пополнить</button>
+                    <button id="withdraw-btn" class="btn withdraw-btn">Вывести</button>
+                </div>
+            </div>
+
+            <!-- Выбор игры -->
+            <div class="game-selector">
+                <button class="game-btn active" data-game="crash">
+                    🚀 Краш
+                </button>
+                <button class="game-btn" data-game="mines">
+                    💣 Мины
+                </button>
+            </div>
+
+            <!-- Контейнер для игр -->
+            <div class="game-container">
+                <!-- Игра КРАШ -->
+                <div id="crash-game" class="game-content active">
+                    <div class="crash-display">
+                        <div class="rocket-container">
+                            <div class="rocket" id="rocket">🚀</div>
+                            <div class="flight-path">
+                                <div class="multiplier-display" id="multiplier">1.00x</div>
+                            </div>
+                        </div>
+                        <div class="history">
+                            <div class="history-title">История</div>
+                            <div class="history-list" id="crash-history"></div>
+                        </div>
+                    </div>
+
+                    <div class="bet-controls">
+                        <div class="bet-input-group">
+                            <input type="number" id="bet-amount" placeholder="Ставка" value="1" min="0.1" step="0.1">
+                            <div class="quick-bets">
+                                <button class="quick-bet" data-multiplier="1.5">1.5x</button>
+                                <button class="quick-bet" data-multiplier="2">2x</button>
+                                <button class="quick-bet" data-multiplier="5">5x</button>
+                                <button class="quick-bet" data-multiplier="10">10x</button>
+                            </div>
+                        </div>
+                        
+                        <div class="auto-cashout">
+                            <input type="number" id="auto-cashout" placeholder="Автовывод" value="2" min="1.1" step="0.1">
+                            <span class="auto-label">x</span>
+                        </div>
+
+                        <button id="place-bet" class="btn bet-btn">Сделать ставку</button>
+                        <button id="cashout-btn" class="btn cashout-btn hidden">Забрать</button>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span>Игроков:</span>
+                            <span id="players-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Выигрыш:</span>
+                            <span id="total-win">0 TON</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Игра МИНЫ -->
+                <div id="mines-game" class="game-content">
+                    <div class="mines-controls">
+                        <div class="mine-settings">
+                            <div class="setting">
+                                <label>Количество мин:</label>
+                                <div class="mine-counter">
+                                    <button class="counter-btn" id="mine-decrease">-</button>
+                                    <span id="mine-count">3</span>
+                                    <button class="counter-btn" id="mine-increase">+</button>
+                                </div>
+                                <small>Макс: 24 из 25 клеток</small>
+                            </div>
+                            <div class="setting">
+                                <label>Ставка:</label>
+                                <input type="number" id="mines-bet" value="1" min="0.1" step="0.1">
+                            </div>
+                            <button id="start-mines" class="btn mines-start-btn">Начать игру</button>
+                        </div>
+                    </div>
+
+                    <div class="mines-grid" id="mines-grid">
+                        <!-- 5x5 сетка будет сгенерирована через JS -->
+                    </div>
+
+                    <div class="mines-info">
+                        <div class="mines-stat">
+                            <span>Клеток открыто:</span>
+                            <span id="opened-cells">0</span>
+                        </div>
+                        <div class="mines-stat">
+                            <span>Мин осталось:</span>
+                            <span id="mines-left">3</span>
+                        </div>
+                        <div class="mines-stat">
+                            <span>Множитель:</span>
+                            <span id="mines-multiplier">1.00x</span>
+                        </div>
+                        <button id="cashout-mines" class="btn mines-cashout-btn hidden">Забрать выигрыш</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- История транзакций -->
+            <div class="transactions">
+                <h3>История игр</h3>
+                <div class="transactions-list" id="transactions-list"></div>
+            </div>
+        </div>
+
+        <!-- Админ информация (скрыто) -->
+        <div class="admin-info hidden">
+            <small>Админ кошелек: <span id="admin-wallet">ВАШ_КОШЕЛЕК</span></small>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
