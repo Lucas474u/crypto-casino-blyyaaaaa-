@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>TON Casino | Crash • Dice • Plinko • Mines</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Import modern fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #0088cc;
+            --primary-dark: #0077b3;
+            --secondary: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Telegram WebApp specific styles */
+        body.twa-body {
+            background: transparent;
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+        }
+        
+        .logo i {
+            color: var(--primary);
+        }
+        
+        /* Balance & Wallet */
+        .wallet-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .balance-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            min-width: 180px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .balance-label {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+        
+        .balance-amount {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Game Tabs */
+        .game-tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+        }
+        
+        .game-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .game-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+        
+        .game-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .game-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Game Container */
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 500px;
+        }
+        
+        /* Game-specific styles */
+        .game-content {
+            display: none;
+        }
+        
+        .game-content.active {
+            display: block;
+        }
+        
+        /* CRASH GAME */
+        .crash-container {
+            text-align: center;
+        }
+        
+        .crash-multiplier {
+            font-size: 72px;
+            font-weight: 800;
+            margin: 30px 0;
+            color: var(--secondary);
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .crash-rocket {
+            font-size: 100px;
+            margin: 30px 0;
+            transition: transform 0.3s ease;
+        }
+        
+        .crash-rocket.flying {
+            animation: rocketFly 0.5s infinite alternate;
+        }
+        
+        @keyframes rocketFly {
+            from { transform: translateY(0px); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .crash-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .bet-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .bet-input input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .auto-cashout {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .auto-cashout input {
+            width: 100px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            text-align: center;
+        }
+        
+        /* DICE GAME */
+        .dice-container {
+            text-align: center;
+        }
+        
+        .dice-result {
+            font-size: 72px;
+            margin: 30px 0;
+        }
+        
+        .dice-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .bet-type {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .bet-type-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+        
+        .bet-type-btn.active {
+            background: var(--primary);
+        }
+        
+        .number-range {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        .range-slider {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+        
+        /* PLINKO GAME */
+        .plinko-container {
+            text-align: center;
+        }
+        
+        .plinko-board {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .plinko-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .plinko-cell {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        .plinko-cell.active {
+            background: var(--primary);
+        }
+        
+        .plinko-cell.multiplier {
+            background: var(--secondary);
+            color: black;
+        }
+        
+        .plinko-ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+        
+        .plinko-controls {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        /* MINES GAME */
+        .mines-container {
+            text-align: center;
+        }
+        
+        .mines-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 500px;
+            margin: 30px auto;
+        }
+        
+        .mine-cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+        }
+        
+        .mine-cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .mine-cell.revealed {
+            background: var(--secondary);
+        }
+        
+        .mine-cell.mine {
+            background: var(--danger);
+        }
+        
+        .mines-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .mines-slider {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        /* Bet History */
+        .bet-history {
+            margin-top: 40px;
+        }
+        
+        .history-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .history-items {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+        }
+        
+        .history-items::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .history-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 150px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .history-multiplier {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .history-win {
+            color: var(--secondary);
+        }
+        
+        .history-loss {
+            color: var(--danger);
+        }
+        
+        /* Wallet Info Modal */
+        .wallet-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            display: none;
+        }
+        
+        .wallet-modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--dark);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .wallet-section {
+                justify-content: space-between;
+            }
+            
+            .balance-card {
+                min-width: auto;
+                flex: 1;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+            
+            .crash-multiplier {
+                font-size: 48px;
+            }
+            
+            .crash-rocket {
+                font-size: 70px;
+            }
+            
+            .mines-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 8px;
+            }
+            
+            .mine-cell {
+                font-size: 18px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-tab {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .crash-multiplier {
+                font-size: 36px;
+            }
+            
+            .dice-result {
+                font-size: 48px;
+            }
+            
+            .plinko-cell {
+                width: 30px;
+                height: 30px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with Wallet Info -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-coins"></i>
+                <span>TON Casino</span>
+            </div>
+            
+            <div class="wallet-section">
+                <div class="balance-card">
+                    <div class="balance-label">Ваш баланс</div>
+                    <div class="balance-amount" id="balance">0 TON</div>
+                </div>
+                
+                <button class="btn btn-primary" id="connect-wallet">
+                    <i class="fas fa-wallet"></i>
+                    <span id="connect-text">Подключить кошелек</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Game Tabs -->
+        <div class="game-tabs">
+            <div class="game-tab active" data-game="crash">
+                <i class="fas fa-rocket"></i> Crash
+            </div>
+            <div class="game-tab" data-game="dice">
+                <i class="fas fa-dice"></i> Dice
+            </div>
+            <div class="game-tab" data-game="plinko">
+                <i class="fas fa-bezier-curve"></i> Plinko
+            </div>
+            <div class="game-tab" data-game="mines">
+                <i class="fas fa-bomb"></i> Mines
+            </div>
+        </div>
+        
+        <!-- Game Container -->
+        <div class="game-container">
+            <!-- CRASH Game -->
+            <div class="game-content active" id="crash-game">
+                <div class="crash-container">
+                    <h2>Crash Game</h2>
+                    <p>Поставьте ставку и заберите до взрыва!</p>
+                    
+                    <div class="crash-multiplier" id="crash-multiplier">1.00x</div>
+                    <div class="crash-rocket" id="crash-rocket">🚀</div>
+                    
+                    <div class="crash-controls">
+                        <div class="bet-input">
+                            <input type="number" id="crash-bet" placeholder="Сумма ставки" value="10" min="1" step="1">
+                            <button class="btn btn-primary" id="place-crash-bet">Сделать ставку</button>
+                        </div>
+                        
+                        <div class="auto-cashout">
+                            <span>Автовывод:</span>
+                            <input type="number" id="auto-cashout" placeholder="2.00" value="2.00" min="1.01" step="0.1">
+                            <span>x</span>
+                        </div>
+                        
+                        <button class="btn btn-success" id="cashout-btn" disabled>Забрать</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- DICE Game -->
+            <div class="game-content" id="dice-game">
+                <div class="dice-container">
+                    <h2>Dice Game</h2>
+                    <p>Угадайте число от 1 до 100</p>
+                    
+                    <div class="dice-result" id="dice-result">🎲</div>
+                    
+                    <div class="dice-controls">
+                        <div class="bet-type">
+                            <div class="bet-type-btn active" data-type="over">Больше</div>
+                            <div class="bet-type-btn" data-type="under">Меньше</div>
+                        </div>
+                        
+                        <div class="number-range">
+                            <span id="target-number">50</span>
+                            <input type="range" class="range-slider" id="dice-slider" min="1" max="99" value="50">
+                            <span>100</span>
+                        </div>
+                        
+                        <div class="bet-input">
+                            <input type="number" id="dice-bet" placeholder="Сумма ставки" value="10" min="1" step="1">
+                            <button class="btn btn-primary" id="place-dice-bet">Крутить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PLINKO Game -->
+            <div class="game-content" id="plinko-game">
+                <div class="plinko-container">
+                    <h2>Plinko Game</h2>
+                    <p>Бросьте шарик и выиграйте умножитель!</p>
+                    
+                    <div class="plinko-board" id="plinko-board">
+                        <!-- Plinko board will be generated here -->
+                    </div>
+                    
+                    <div class="plinko-controls">
+                        <div class="bet-input">
+                            <input type="number" id="plinko-bet" placeholder="Сумма ставки" value="10" min="1" step="1">
+                            <button class="btn btn-primary" id="place-plinko-bet">Бросить шарик</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MINES Game -->
+            <div class="game-content" id="mines-game">
+                <div class="mines-container">
+                    <h2>Mines Game</h2>
+                    <p>Найдите все бриллианты, избегая мин!</p>
+                    
+                    <div class="mines-grid" id="mines-grid">
+                        <!-- Mines grid will be generated here -->
+                    </div>
+                    
+                    <div class="mines-controls">
+                        <div class="mines-slider">
+                            <span>Количество мин:</span>
+                            <input type="range" class="range-slider" id="mines-slider" min="1" max="24" value="3">
+                            <span id="mines-count">3</span>
+                        </div>
+                        
+                        <div class="bet-input">
+                            <input type="number" id="mines-bet" placeholder="Сумма ставки" value="10" min="1" step="1">
+                            <button class="btn btn-primary" id="place-mines-bet">Начать игру</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bet History -->
+        <div class="bet-history">
+            <div class="history-title">
+                <i class="fas fa-history"></i>
+                <span>История ставок</span>
+            </div>
+            <div class="history-items" id="history-items">
+                <!-- History items will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wallet Info Modal -->
+    <div class="wallet-modal" id="wallet-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Информация о кошельке</h2>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <div class="wallet-info" id="wallet-info">
+                <p><strong>Адрес:</strong> <span id="wallet-address">Не подключен</span></p>
+                <p><strong>Баланс:</strong> <span id="wallet-balance">0 TON</span></p>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-danger" id="disconnect-wallet">Отключить кошелек</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Манифест TON Connect из вашего примера
+        const manifest = {
+            "name": "TonConnect",
+            "description": "This is a sample decentralized application using TonConnect.",
+            "url": "https://miladsoft.github.io/ton-connect/",
+            "iconUrl": "https://miladsoft.github.io/ton-connect/icon.png",
+            "bridgeUrl": "https://bridge.tonapi.io/bridge",
+            "termsUrl": "https://miladsoft.github.io/ton-connect/terms",
+            "privacyUrl": "https://miladsoft.github.io/ton-connect/privacy"
+        };
+        
+        // Initialize TON Connect UI
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifest: manifest,
+            buttonRootId: 'connect-wallet'
+        });
+        
+        // Game state variables
+        let currentGame = 'crash';
+        let userBalance = 0;
+        let walletAddress = null;
+        let crashInterval = null;
+        let crashMultiplier = 1.00;
+        let isCrashRunning = false;
+        let crashBetAmount = 0;
+        let crashBetPlaced = false;
+        let autoCashout = 2.00;
+        
+        let diceTarget = 50;
+        let diceBetType = 'over';
+        
+        let minesCount = 3;
+        let minesGrid = [];
+        let minesRevealed = 0;
+        let minesGameActive = false;
+        
+        let betHistory = [];
+        
+        // DOM Elements
+        const connectWalletBtn = document.getElementById('connect-wallet');
+        const connectText = document.getElementById('connect-text');
+        const balanceElement = document.getElementById('balance');
+        const walletModal = document.getElementById('wallet-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const disconnectWalletBtn = document.getElementById('disconnect-wallet');
+        const walletAddressElement = document.getElementById('wallet-address');
+        const walletBalanceElement = document.getElementById('wallet-balance');
+        
+        // Game elements
+        const gameTabs = document.querySelectorAll('.game-tab');
+        const gameContents = document.querySelectorAll('.game-content');
+        
+        // Crash elements
+        const crashMultiplierElement = document.getElementById('crash-multiplier');
+        const crashRocketElement = document.getElementById('crash-rocket');
+        const crashBetInput = document.getElementById('crash-bet');
+        const placeCrashBetBtn = document.getElementById('place-crash-bet');
+        const cashoutBtn = document.getElementById('cashout-btn');
+        const autoCashoutInput = document.getElementById('auto-cashout');
+        
+        // Dice elements
+        const diceResultElement = document.getElementById('dice-result');
+        const diceBetTypeBtns = document.querySelectorAll('.bet-type-btn');
+        const diceSlider = document.getElementById('dice-slider');
+        const targetNumberElement = document.getElementById('target-number');
+        const diceBetInput = document.getElementById('dice-bet');
+        const placeDiceBetBtn = document.getElementById('place-dice-bet');
+        
+        // Plinko elements
+        const plinkoBoard = document.getElementById('plinko-board');
+        const plinkoBetInput = document.getElementById('plinko-bet');
+        const placePlinkoBetBtn = document.getElementById('place-plinko-bet');
+        
+        // Mines elements
+        const minesGridElement = document.getElementById('mines-grid');
+        const minesSlider = document.getElementById('mines-slider');
+        const minesCountElement = document.getElementById('mines-count');
+        const minesBetInput = document.getElementById('mines-bet');
+        const placeMinesBetBtn = document.getElementById('place-mines-bet');
+        
+        // History elements
+        const historyItemsElement = document.getElementById('history-items');
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            generatePlinkoBoard();
+            updateMinesGrid();
+            checkWalletConnection();
+            
+            // Set initial bet amounts based on balance
+            if (userBalance > 0) {
+                const suggestedBet = Math.min(10, Math.floor(userBalance * 0.1));
+                crashBetInput.value = suggestedBet;
+                diceBetInput.value = suggestedBet;
+                plinkoBetInput.value = suggestedBet;
+                minesBetInput.value = suggestedBet;
+            }
+        });
+        
+        // Initialize all event listeners
+        function initializeEventListeners() {
+            // Game tab switching
+            gameTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const game = tab.getAttribute('data-game');
+                    switchGame(game);
+                });
+            });
+            
+            // Wallet connection
+            connectWalletBtn.addEventListener('click', toggleWalletModal);
+            closeModalBtn.addEventListener('click', () => walletModal.classList.remove('active'));
+            disconnectWalletBtn.addEventListener('click', disconnectWallet);
+            
+            // Crash game
+            placeCrashBetBtn.addEventListener('click', placeCrashBet);
+            cashoutBtn.addEventListener('click', cashoutCrashBet);
+            autoCashoutInput.addEventListener('input', function() {
+                autoCashout = parseFloat(this.value) || 2.00;
+            });
+            
+            // Dice game
+            diceBetTypeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    diceBetTypeBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    diceBetType = this.getAttribute('data-type');
+                });
+            });
+            
+            diceSlider.addEventListener('input', function() {
+                diceTarget = parseInt(this.value);
+                targetNumberElement.textContent = diceTarget;
+            });
+            
+            placeDiceBetBtn.addEventListener('click', placeDiceBet);
+            
+            // Plinko game
+            placePlinkoBetBtn.addEventListener('click', placePlinkoBet);
+            
+            // Mines game
+            minesSlider.addEventListener('input', function() {
+                minesCount = parseInt(this.value);
+                minesCountElement.textContent = minesCount;
+            });
+            
+            placeMinesBetBtn.addEventListener('click', startMinesGame);
+            
+            // TON Connect events
+            tonConnectUI.onStatusChange(wallet => {
+                if (wallet) {
+                    walletConnected(wallet);
+                } else {
+                    walletDisconnected();
+                }
+            });
+        }
+        
+        // Switch between games
+        function switchGame(game) {
+            currentGame = game;
+            
+            // Update tabs
+            gameTabs.forEach(tab => {
+                if (tab.getAttribute('data-game') === game) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update game content
+            gameContents.forEach(content => {
+                if (content.id === `${game}-game`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Stop crash game if switching away
+            if (game !== 'crash' && isCrashRunning) {
+                stopCrashGame();
+            }
+        }
+        
+        // Check if wallet is already connected
+        async function checkWalletConnection() {
+            const wallet = await tonConnectUI.getWallet();
+            if (wallet) {
+                walletConnected(wallet);
+            }
+        }
+        
+        // Handle wallet connection
+        async function walletConnected(wallet) {
+            walletAddress = wallet.account.address;
+            walletAddressElement.textContent = shortenAddress(walletAddress);
+            
+            // Fetch balance using TON API v2
+            try {
+                const response = await fetch(`https://tonapi.io/v2/accounts/${walletAddress}`);
+                const data = await response.json();
+                userBalance = data.balance ? data.balance / 1000000000 : 0;
+                balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                walletBalanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                
+                // Update bet inputs
+                const suggestedBet = Math.min(10, Math.floor(userBalance * 0.1));
+                crashBetInput.value = suggestedBet;
+                diceBetInput.value = suggestedBet;
+                plinkoBetInput.value = suggestedBet;
+                minesBetInput.value = suggestedBet;
+            } catch (error) {
+                console.error('Error fetching balance:', error);
+                userBalance = 0;
+            }
+            
+            connectText.textContent = 'Кошелек подключен';
+            connectWalletBtn.innerHTML = '<i class="fas fa-check"></i> Кошелек подключен';
+        }
+        
+        // Handle wallet disconnection
+        function walletDisconnected() {
+            walletAddress = null;
+            userBalance = 0;
+            balanceElement.textContent = '0 TON';
+            walletBalanceElement.textContent = '0 TON';
+            walletAddressElement.textContent = 'Не подключен';
+            connectText.textContent = 'Подключить кошелек';
+            connectWalletBtn.innerHTML = '<i class="fas fa-wallet"></i> Подключить кошелек';
+            walletModal.classList.remove('active');
+        }
+        
+        // Toggle wallet modal
+        function toggleWalletModal() {
+            if (walletAddress) {
+                walletModal.classList.add('active');
+            } else {
+                tonConnectUI.openModal();
+            }
+        }
+        
+        // Disconnect wallet
+        async function disconnectWallet() {
+            await tonConnectUI.disconnect();
+            walletModal.classList.remove('active');
+        }
+        
+        // Shorten wallet address for display
+        function shortenAddress(address) {
+            return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+        }
+        
+        // CRASH GAME FUNCTIONS
+        function placeCrashBet() {
+            if (!walletAddress) {
+                alert('Пожалуйста, подключите кошелек сначала');
+                return;
+            }
+            
+            crashBetAmount = parseFloat(crashBetInput.value);
+            if (isNaN(crashBetAmount) || crashBetAmount < 1) {
+                alert('Пожалуйста, введите корректную сумму ставки');
+                return;
+            }
+            
+            if (crashBetAmount > userBalance) {
+                alert('Недостаточно средств на балансе');
+                return;
+            }
+            
+            // Deduct bet amount from balance (simulated)
+            userBalance -= crashBetAmount;
+            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            
+            crashBetPlaced = true;
+            placeCrashBetBtn.disabled = true;
+            cashoutBtn.disabled = false;
+            crashMultiplier = 1.00;
+            crashMultiplierElement.textContent = '1.00x';
+            crashMultiplierElement.style.color = '#2ecc71';
+            crashRocketElement.classList.add('flying');
+            
+            // Start crash sequence
+            isCrashRunning = true;
+            startCrashGame();
+        }
+        
+        function startCrashGame() {
+            let speed = 1;
+            let time = 0;
+            
+            crashInterval = setInterval(() => {
+                time += 0.05;
+                
+                // Increase multiplier with random acceleration
+                const baseIncrement = 0.01 * speed;
+                const randomFactor = 1 + (Math.random() * 0.5 - 0.25); // ±25% randomness
+                const increment = baseIncrement * randomFactor;
+                
+                crashMultiplier += increment;
+                
+                // Randomly accelerate
+                if (Math.random() < 0.1) {
+                    speed = Math.min(speed + 0.1, 3);
+                }
+                
+                // Display multiplier
+                crashMultiplierElement.textContent = `${crashMultiplier.toFixed(2)}x`;
+                
+                // Change color based on multiplier
+                if (crashMultiplier >= 10) {
+                    crashMultiplierElement.style.color = '#f39c12';
+                } else if (crashMultiplier >= 5) {
+                    crashMultiplierElement.style.color = '#3498db';
+                } else if (crashMultiplier >= 2) {
+                    crashMultiplierElement.style.color = '#2ecc71';
+                }
+                
+                // Check for auto cashout
+                if (crashBetPlaced && crashMultiplier >= autoCashout) {
+                    cashoutCrashBet();
+                }
+                
+                // Calculate crash probability
+                // Higher multiplier = higher crash chance
+                let crashProbability = 0;
+                
+                // Base formula for crash chance
+                if (crashMultiplier < 1.1) {
+                    crashProbability = 0.01; // 1% chance to crash immediately at 1.00x
+                } else if (crashMultiplier < 2) {
+                    crashProbability = 0.005 * (crashMultiplier - 1);
+                } else if (crashMultiplier < 5) {
+                    crashProbability = 0.005 + 0.002 * (crashMultiplier - 2);
+                } else {
+                    crashProbability = 0.011 + 0.003 * (crashMultiplier - 5);
+                }
+                
+                // Add time factor - the longer it runs, the higher crash chance
+                crashProbability += time * 0.0005;
+                
+                // Cap at 5% max probability per tick
+                crashProbability = Math.min(crashProbability, 0.05);
+                
+                // Random crash
+                if (Math.random() < crashProbability) {
+                    crashGame();
+                }
+            }, 50);
+        }
+        
+        function cashoutCrashBet() {
+            if (!crashBetPlaced) return;
+            
+            const winAmount = crashBetAmount * crashMultiplier;
+            userBalance += winAmount;
+            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            
+            addToHistory('crash', crashMultiplier.toFixed(2), true, winAmount);
+            
+            alert(`Вы успешно забрали ${winAmount.toFixed(2)} TON (${crashMultiplier.toFixed(2)}x)`);
+            resetCrashGame();
+        }
+        
+        function crashGame() {
+            clearInterval(crashInterval);
+            
+            if (crashBetPlaced) {
+                // Player loses bet
+                addToHistory('crash', '1.00x', false, 0);
+                alert(`Ракета взорвалась на ${crashMultiplier.toFixed(2)}x! Вы проиграли ставку.`);
+            }
+            
+            // Show explosion
+            crashMultiplierElement.textContent = '1.00x БУМ!';
+            crashMultiplierElement.style.color = '#e74c3c';
+            crashRocketElement.textContent = '💥';
+            crashRocketElement.classList.remove('flying');
+            
+            setTimeout(() => {
+                crashRocketElement.textContent = '🚀';
+                resetCrashGame();
+            }, 2000);
+        }
+        
+        function resetCrashGame() {
+            clearInterval(crashInterval);
+            isCrashRunning = false;
+            crashBetPlaced = false;
+            placeCrashBetBtn.disabled = false;
+            cashoutBtn.disabled = true;
+            crashRocketElement.classList.remove('flying');
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                crashMultiplierElement.textContent = '1.00x';
+                crashMultiplierElement.style.color = '#2ecc71';
+            }, 3000);
+        }
+        
+        function stopCrashGame() {
+            clearInterval(crashInterval);
+            isCrashRunning = false;
+            crashBetPlaced = false;
+            placeCrashBetBtn.disabled = false;
+            cashoutBtn.disabled = true;
+            crashRocketElement.classList.remove('flying');
+        }
+        
+        // DICE GAME FUNCTIONS
+        function placeDiceBet() {
+            if (!walletAddress) {
+                alert('Пожалуйста, подключите кошелек сначала');
+                return;
+            }
+            
+            const betAmount = parseFloat(diceBetInput.value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Пожалуйста, введите корректную сумму ставки');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert('Недостаточно средств на балансе');
+                return;
+            }
+            
+            // Deduct bet amount
+            userBalance -= betAmount;
+            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            
+            // Show rolling animation
+            diceResultElement.textContent = '🎲';
+            diceResultElement.style.animation = 'none';
+            setTimeout(() => {
+                diceResultElement.style.animation = 'roll 1s ease-in-out';
+            }, 10);
+            
+            // Roll dice after animation
+            setTimeout(() => {
+                const diceRoll = Math.floor(Math.random() * 100) + 1;
+                diceResultElement.textContent = `🎲 ${diceRoll}`;
+                
+                // Calculate win
+                let win = false;
+                let multiplier = 0;
+                
+                if (diceBetType === 'over') {
+                    win = diceRoll > diceTarget;
+                    multiplier = (99 / (100 - diceTarget)).toFixed(2);
+                } else {
+                    win = diceRoll < diceTarget;
+                    multiplier = (99 / diceTarget).toFixed(2);
+                }
+                
+                // Check for exact number (instant loss)
+                if (diceRoll === diceTarget) {
+                    win = false;
+                }
+                
+                // Process result
+                if (win) {
+                    const winAmount = betAmount * multiplier;
+                    userBalance += winAmount;
+                    balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                    
+                    diceResultElement.style.color = '#2ecc71';
+                    addToHistory('dice', `${multiplier}x`, true, winAmount);
+                    alert(`Вы выиграли ${winAmount.toFixed(2)} TON (${multiplier}x)!`);
+                } else {
+                    diceResultElement.style.color = '#e74c3c';
+                    addToHistory('dice', '0x', false, 0);
+                    alert('Вы проиграли ставку');
+                }
+                
+                // Reset color after 2 seconds
+                setTimeout(() => {
+                    diceResultElement.style.color = '';
+                }, 2000);
+            }, 1000);
+        }
+        
+        // PLINKO GAME FUNCTIONS
+        function generatePlinkoBoard() {
+            plinkoBoard.innerHTML = '';
+            const rows = 10;
+            
+            for (let row = 0; row < rows; row++) {
+                const plinkoRow = document.createElement('div');
+                plinkoRow.className = 'plinko-row';
+                
+                for (let col = 0; col <= row; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'plinko-cell';
+                    
+                    // Assign multipliers to bottom row
+                    if (row === rows - 1) {
+                        const multipliers = [0.2, 0.5, 1, 2, 5, 2, 1, 0.5, 0.2];
+                        const midPoint = Math.floor(row / 2);
+                        const multiplierIndex = col - (row - midPoint);
+                        
+                        if (multiplierIndex >= 0 && multiplierIndex < multipliers.length) {
+                            cell.textContent = `${multipliers[multiplierIndex]}x`;
+                            cell.classList.add('multiplier');
+                        }
+                    }
+                    
+                    plinkoRow.appendChild(cell);
+                }
+                
+                plinkoBoard.appendChild(plinkoRow);
+            }
+        }
+        
+        function placePlinkoBet() {
+            if (!walletAddress) {
+                alert('Пожалуйста, подключите кошелек сначала');
+                return;
+            }
+            
+            const betAmount = parseFloat(plinkoBetInput.value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Пожалуйста, введите корректную сумму ставки');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert('Недостаточно средств на балансе');
+                return;
+            }
+            
+            // Deduct bet amount
+            userBalance -= betAmount;
+            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            
+            // Simulate ball drop
+            simulatePlinkoDrop(betAmount);
+        }
+        
+        function simulatePlinkoDrop(betAmount) {
+            const rows = 10;
+            let position = Math.floor(rows / 2);
+            const path = [];
+            
+            // Create ball element
+            const ball = document.createElement('div');
+            ball.className = 'plinko-ball';
+            plinkoBoard.appendChild(ball);
+            
+            // Animate ball drop
+            let row = 0;
+            const dropInterval = setInterval(() => {
+                // Move ball down
+                const cellSize = 40;
+                const top = row * cellSize + 20;
+                const left = position * cellSize + (row * 20);
+                
+                ball.style.top = `${top}px`;
+                ball.style.left = `${left}px`;
+                
+                path.push(position);
+                row++;
+                
+                // Randomly move left or right for next row
+                if (row < rows) {
+                    if (Math.random() < 0.5) {
+                        position = Math.max(0, position - 1);
+                    } else {
+                        position = Math.min(row, position + 1);
+                    }
+                }
+                
+                // Reached bottom
+                if (row >= rows) {
+                    clearInterval(dropInterval);
+                    
+                    // Calculate result based on final position
+                    const multipliers = [0.2, 0.5, 1, 2, 5, 2, 1, 0.5, 0.2];
+                    const resultIndex = position - (rows - Math.floor(multipliers.length / 2));
+                    
+                    let multiplier = 0;
+                    if (resultIndex >= 0 && resultIndex < multipliers.length) {
+                        multiplier = multipliers[resultIndex];
+                    }
+                    
+                    const winAmount = betAmount * multiplier;
+                    
+                    setTimeout(() => {
+                        // Remove ball
+                        ball.remove();
+                        
+                        // Process result
+                        if (multiplier > 0) {
+                            userBalance += winAmount;
+                            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                            addToHistory('plinko', `${multiplier}x`, true, winAmount);
+                            alert(`Вы выиграли ${winAmount.toFixed(2)} TON (${multiplier}x)!`);
+                        } else {
+                            addToHistory('plinko', '0x', false, 0);
+                            alert('Вы проиграли ставку');
+                        }
+                    }, 500);
+                }
+            }, 200);
+        }
+        
+        // MINES GAME FUNCTIONS
+        function updateMinesGrid() {
+            minesGridElement.innerHTML = '';
+            minesGrid = [];
+            
+            // Create 5x5 grid
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'mine-cell';
+                cell.dataset.index = i;
+                cell.textContent = '💎';
+                
+                cell.addEventListener('click', () => revealMineCell(i));
+                
+                minesGridElement.appendChild(cell);
+                minesGrid.push({
+                    index: i,
+                    isMine: false,
+                    revealed: false
+                });
+            }
+        }
+        
+        function startMinesGame() {
+            if (!walletAddress) {
+                alert('Пожалуйста, подключите кошелек сначала');
+                return;
+            }
+            
+            const betAmount = parseFloat(minesBetInput.value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Пожалуйста, введите корректную сумму ставки');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert('Недостаточно средств на балансе');
+                return;
+            }
+            
+            // Deduct bet amount
+            userBalance -= betAmount;
+            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            
+            // Initialize game
+            minesGameActive = true;
+            minesRevealed = 0;
+            updateMinesGrid();
+            placeMinesBetBtn.disabled = true;
+            minesSlider.disabled = true;
+            minesBetInput.disabled = true;
+            
+            // Place mines randomly
+            let minesPlaced = 0;
+            while (minesPlaced < minesCount) {
+                const randomIndex = Math.floor(Math.random() * 25);
+                if (!minesGrid[randomIndex].isMine) {
+                    minesGrid[randomIndex].isMine = true;
+                    minesPlaced++;
+                }
+            }
+        }
+        
+        function revealMineCell(index) {
+            if (!minesGameActive || minesGrid[index].revealed) return;
+            
+            const cell = minesGridElement.children[index];
+            minesGrid[index].revealed = true;
+            minesRevealed++;
+            
+            if (minesGrid[index].isMine) {
+                // Hit a mine - game over
+                cell.textContent = '💣';
+                cell.classList.add('mine');
+                
+                // Reveal all mines
+                minesGrid.forEach((cellData, i) => {
+                    if (cellData.isMine) {
+                        minesGridElement.children[i].textContent = '💣';
+                        minesGridElement.children[i].classList.add('mine');
+                    }
+                });
+                
+                minesGameActive = false;
+                placeMinesBetBtn.disabled = false;
+                minesSlider.disabled = false;
+                minesBetInput.disabled = false;
+                
+                addToHistory('mines', '0x', false, 0);
+                alert('Вы наткнулись на мину! Игра окончена.');
+            } else {
+                // Safe cell
+                cell.classList.add('revealed');
+                
+                // Check if all safe cells are revealed
+                const safeCells = 25 - minesCount;
+                if (minesRevealed === safeCells) {
+                    // Player wins
+                    const multiplier = (1 + (minesCount / 3)).toFixed(2);
+                    const winAmount = parseFloat(minesBetInput.value) * multiplier;
+                    
+                    userBalance += winAmount;
+                    balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                    
+                    // Reveal all mines
+                    minesGrid.forEach((cellData, i) => {
+                        if (cellData.isMine) {
+                            minesGridElement.children[i].textContent = '💣';
+                            minesGridElement.children[i].classList.add('mine');
+                        }
+                    });
+                    
+                    minesGameActive = false;
+                    placeMinesBetBtn.disabled = false;
+                    minesSlider.disabled = false;
+                    minesBetInput.disabled = false;
+                    
+                    addToHistory('mines', `${multiplier}x`, true, winAmount);
+                    alert(`Вы нашли все бриллианты! Выигрыш: ${winAmount.toFixed(2)} TON (${multiplier}x)`);
+                }
+            }
+        }
+        
+        // HISTORY FUNCTIONS
+        function addToHistory(game, multiplier, win, amount) {
+            const historyItem = {
+                game,
+                multiplier,
+                win,
+                amount,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            betHistory.unshift(historyItem);
+            
+            // Keep only last 10 items
+            if (betHistory.length > 10) {
+                betHistory.pop();
+            }
+            
+            updateHistoryDisplay();
+        }
+        
+        function updateHistoryDisplay() {
+            historyItemsElement.innerHTML = '';
+            
+            betHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                let icon = '';
+                switch(item.game) {
+                    case 'crash': icon = '🚀'; break;
+                    case 'dice': icon = '🎲'; break;
+                    case 'plinko': icon = '🔴'; break;
+                    case 'mines': icon = '💎'; break;
+                }
+                
+                historyItem.innerHTML = `
+                    <div class="history-multiplier ${item.win ? 'history-win' : 'history-loss'}">
+                        ${icon} ${item.multiplier}
+                    </div>
+                    <div>${item.win ? `+${item.amount.toFixed(2)} TON` : 'Проигрыш'}</div>
+                    <div style="font-size: 12px; color: #aaa;">${item.timestamp}</div>
+                `;
+                
+                historyItemsElement.appendChild(historyItem);
+            });
+        }
+        
+        // Add animation for dice roll
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes roll {
+                0% { transform: rotate(0deg) scale(1); }
+                25% { transform: rotate(90deg) scale(1.2); }
+                50% { transform: rotate(180deg) scale(1); }
+                75% { transform: rotate(270deg) scale(1.2); }
+                100% { transform: rotate(360deg) scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Telegram WebApp integration
+        if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            
+            // Expand WebApp to full height
+            tg.expand();
+            
+            // Set theme colors
+            tg.setHeaderColor('#1a1a2e');
+            tg.setBackgroundColor('#1a1a2e');
+            
+            // Add Telegram styles
+            document.body.classList.add('twa-body');
+            
+            // Handle back button
+            tg.BackButton.onClick(() => {
+                if (walletModal.classList.contains('active')) {
+                    walletModal.classList.remove('active');
+                } else if (currentGame !== 'crash') {
+                    switchGame('crash');
+                } else {
+                    tg.close();
+                }
+            });
+            
+            // Show back button when needed
+            tg.BackButton.show();
+        }
+    </script>
+</body>
+</html>
