@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Casino - Premium Crypto Gaming</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="images/logo.png" alt="TON Casino">
+                <span>TON Casino</span>
+            </div>
+            <div class="nav-links">
+                <a href="#games">Games</a>
+                <a href="#bonus">Bonus</a>
+                <a href="#referrals">Referrals</a>
+                <a href="#faq">FAQ</a>
+            </div>
+            <div class="wallet-section">
+                <div id="wallet-info" style="display: none;">
+                    <span id="wallet-balance">0 TON</span>
+                    <button id="disconnect-wallet" class="btn-disconnect">Disconnect</button>
+                </div>
+                <button id="connect-wallet" class="btn-connect">
+                    <img src="images/ton-icon.png" alt="TON">
+                    Connect Wallet
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>PREMIUM <span class="gradient-text">TON CASINO</span></h1>
+            <p>Experience luxury gaming with instant TON payouts</p>
+            <div class="stats">
+                <div class="stat">
+                    <h3>2.5M+</h3>
+                    <p>Bets Placed</p>
+                </div>
+                <div class="stat">
+                    <h3>50K+</h3>
+                    <p>Active Players</p>
+                </div>
+                <div class="stat">
+                    <h3>97.8%</h3>
+                    <p>RTP</p>
+                </div>
+                <div class="stat">
+                    <h3>1.5M TON</h3>
+                    <p>Total Won</p>
+                </div>
+            </div>
+        </div>
+        <div class="rocket-container">
+            <img src="images/rocket.png" alt="Rocket" class="rocket">
+        </div>
+    </section>
+
+    <!-- Games Section -->
+    <section id="games" class="games-section">
+        <h2>PREMIUM GAMES</h2>
+        <div class="games-grid">
+            <div class="game-card" data-game="plinko">
+                <div class="game-icon">
+                    <i class="fas fa-circle-notch"></i>
+                </div>
+                <h3>PLINKO</h3>
+                <p>Drop balls for massive multipliers</p>
+                <button class="btn-play">Play Now</button>
+            </div>
+            <div class="game-card" data-game="mines">
+                <div class="game-icon">
+                    <i class="fas fa-bomb"></i>
+                </div>
+                <h3>MINES</h3>
+                <p>Find diamonds, avoid mines</p>
+                <button class="btn-play">Play Now</button>
+            </div>
+            <div class="game-card" data-game="dice">
+                <div class="game-icon">
+                    <i class="fas fa-dice"></i>
+                </div>
+                <h3>DICE</h3>
+                <p>Predict the dice roll outcome</p>
+                <button class="btn-play">Play Now</button>
+            </div>
+            <div class="game-card" data-game="crash">
+                <div class="game-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>CRASH</h3>
+                <p>Cash out before it crashes</p>
+                <button class="btn-play">Play Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bonus Wheel Section -->
+    <section id="bonus" class="bonus-section">
+        <h2>DAILY BONUS WHEEL</h2>
+        <div class="wheel-container">
+            <div class="wheel">
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div class="wheel-center">
+                    <button id="spin-wheel" class="btn-spin">SPIN</button>
+                </div>
+            </div>
+            <div class="wheel-prizes">
+                <h3>Today's Prizes</h3>
+                <ul>
+                    <li>5 TON</li>
+                    <li>10 TON</li>
+                    <li>25 TON</li>
+                    <li>50 TON</li>
+                    <li>100 TON</li>
+                    <li>500 TON</li>
+                </ul>
+                <p class="cooldown">Next spin in: <span id="cooldown-timer">24:00:00</span></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Referral System -->
+    <section id="referrals" class="referral-section">
+        <h2>REFERRAL PROGRAM</h2>
+        <div class="referral-container">
+            <div class="referral-stats">
+                <div class="referral-stat">
+                    <h3>15%</h3>
+                    <p>Commission</p>
+                </div>
+                <div class="referral-stat">
+                    <h3 id="referral-count">0</h3>
+                    <p>Referrals</p>
+                </div>
+                <div class="referral-stat">
+                    <h3 id="referral-earnings">0 TON</h3>
+                    <p>Earned</p>
+                </div>
+            </div>
+            <div class="referral-link">
+                <h3>Your Referral Link</h3>
+                <div class="link-container">
+                    <input type="text" id="referral-link" readonly>
+                    <button id="copy-link" class="btn-copy">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Earn 15% from each friend's bets!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Game Modals -->
+    <div id="game-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="game-content"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
