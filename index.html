@@ -12,506 +12,346 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Animate.css -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon" href="https://ton.org/download/ton_symbol.svg">
 </head>
 <body>
-    <!-- Background Elements -->
-    <div class="bg-elements">
-        <div class="particles" id="particles"></div>
-        <div class="floating-coins">
-            <div class="coin"><i class="fas fa-coins"></i></div>
-            <div class="coin"><i class="fas fa-gem"></i></div>
-            <div class="coin"><i class="fas fa-diamond"></i></div>
-            <div class="coin"><i class="fas fa-bitcoin"></i></div>
+    <!-- Rocket Animation -->
+    <div class="rocket-container">
+        <div class="rocket">
+            <div class="rocket-body">
+                <div class="rocket-window"></div>
+            </div>
+            <div class="rocket-fins">
+                <div class="fin left-fin"></div>
+                <div class="fin right-fin"></div>
+            </div>
+            <div class="rocket-flame">
+                <div class="flame"></div>
+            </div>
         </div>
-        <div class="light-beams"></div>
+        <div class="stars"></div>
     </div>
 
-    <!-- Main Container -->
-    <div class="main-wrapper">
-        <!-- Header -->
-        <header class="header animate__animated animate__fadeInDown">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="fas fa-crown"></i>
-                </div>
-                <h1 class="logo-text">
-                    <span class="ton">TON</span>
-                    <span class="casino">CASINO</span>
-                    <sup class="pro-badge">PRO</sup>
-                </h1>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h1>TON <span class="casino">CASINO</span></h1>
             </div>
             
-            <div class="header-stats">
-                <div class="stat">
-                    <i class="fas fa-users"></i>
-                    <span class="stat-value" id="online-users">1,245</span>
-                    <span class="stat-label">Online</span>
+            <div class="wallet-section">
+                <div id="wallet-info" class="wallet-info">
+                    <div class="wallet-balance">
+                        <img src="https://ton.org/download/ton_symbol.svg" alt="TON" class="ton-icon">
+                        <span id="balance">0.00 TON</span>
+                    </div>
+                    <div class="wallet-address" id="wallet-address"></div>
+                    <button id="disconnect-wallet" class="btn-disconnect">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
-                <div class="stat">
-                    <i class="fas fa-coins"></i>
-                    <span class="stat-value" id="total-wagered">12.5M</span>
-                    <span class="stat-label">TON Wagered</span>
-                </div>
-                <div class="stat">
-                    <i class="fas fa-trophy"></i>
-                    <span class="stat-value" id="big-win">245K</span>
-                    <span class="stat-label">Biggest Win</span>
-                </div>
+                
+                <!-- Кнопка Connect Wallet ТОЧНО как на фото -->
+                <button id="connect-wallet" class="ton-connect-button">
+                    <img src="https://ton.org/download/ton_symbol.svg" alt="TON" class="ton-button-icon">
+                    Connect Wallet
+                </button>
             </div>
-        </header>
+        </div>
+    </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Left Panel - Games -->
-            <div class="left-panel">
-                <div class="panel-header">
-                    <h2><i class="fas fa-gamepad"></i> Games</h2>
-                    <div class="balance-display" id="balance-display">
-                        <i class="fas fa-wallet"></i>
-                        <span class="balance">0.00 TON</span>
-                    </div>
-                </div>
-
-                <!-- Games Grid -->
-                <div class="games-grid">
-                    <div class="game-card active" data-game="dice" onclick="switchGame('dice')">
-                        <div class="game-icon dice-icon">
-                            <i class="fas fa-dice"></i>
-                        </div>
-                        <h3>Dice</h3>
-                        <p>Roll & Win</p>
-                        <div class="game-hot">HOT</div>
-                    </div>
-
-                    <div class="game-card" data-game="plinko" onclick="switchGame('plinko')">
-                        <div class="game-icon plinko-icon">
-                            <i class="fas fa-circle-notch"></i>
-                        </div>
-                        <h3>Plinko</h3>
-                        <p>Drop & Multiply</p>
-                    </div>
-
-                    <div class="game-card" data-game="mines" onclick="switchGame('mines')">
-                        <div class="game-icon mines-icon">
-                            <i class="fas fa-bomb"></i>
-                        </div>
-                        <h3>Mines</h3>
-                        <p>Find Diamonds</p>
-                        <div class="game-new">NEW</div>
-                    </div>
-
-                    <div class="game-card" data-game="crash" onclick="switchGame('crash')">
-                        <div class="game-icon crash-icon">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <h3>Crash</h3>
-                        <p>Rocket Game</p>
-                    </div>
-
-                    <div class="game-card" data-game="wheel" onclick="openBonusWheel()">
-                        <div class="game-icon wheel-icon">
-                            <i class="fas fa-gift"></i>
-                        </div>
-                        <h3>Bonus Wheel</h3>
-                        <p>Free Spins</p>
-                    </div>
-
-                    <div class="game-card" data-game="referral" onclick="openReferralModal()">
-                        <div class="game-icon referral-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h3>Referral</h3>
-                        <p>Earn 15%</p>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="quick-stats">
-                    <h3><i class="fas fa-chart-line"></i> Quick Stats</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">RTP</div>
-                            <div class="stat-value rtp">97.8%</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Total Bets</div>
-                            <div class="stat-value">2.4M</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Wins Today</div>
-                            <div class="stat-value">1,245</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Max Win</div>
-                            <div class="stat-value">500x</div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left Sidebar - Games -->
+        <div class="sidebar left-sidebar">
+            <h3><i class="fas fa-gamepad"></i> GAMES</h3>
+            <div class="games-list">
+                <button class="game-tab active" data-game="dice">
+                    <i class="fas fa-dice"></i>
+                    <span>Dice</span>
+                </button>
+                <button class="game-tab" data-game="plinko">
+                    <i class="fas fa-circle"></i>
+                    <span>Plinko</span>
+                </button>
+                <button class="game-tab" data-game="mines">
+                    <i class="fas fa-bomb"></i>
+                    <span>Mines</span>
+                </button>
+                <button class="game-tab" data-game="crash">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Crash</span>
+                </button>
             </div>
 
-            <!-- Center Panel - Game -->
-            <div class="center-panel">
-                <!-- Dice Game -->
-                <div id="dice-game" class="game-container active">
-                    <div class="game-header animate__animated animate__fadeIn">
-                        <h2><i class="fas fa-dice"></i> Dice Game</h2>
-                        <p class="game-description">Predict the roll and win up to 99x</p>
+            <!-- Bonus Wheel -->
+            <div class="bonus-section">
+                <h3><i class="fas fa-gift"></i> DAILY BONUS</h3>
+                <div class="wheel-container">
+                    <canvas id="wheelCanvas" width="200" height="200"></canvas>
+                    <div class="wheel-center">
+                        <button id="spin-wheel" class="btn-spin">
+                            <i class="fas fa-redo"></i>
+                        </button>
                     </div>
+                </div>
+                <p class="cooldown">Next spin: <span id="cooldown">24:00:00</span></p>
+            </div>
 
-                    <div class="game-content">
-                        <!-- Dice Display -->
-                        <div class="dice-display" id="dice-display">
-                            <div class="dice-result" id="dice-result">
-                                <div class="dice-number">?</div>
-                                <div class="dice-animation" id="dice-animation"></div>
+            <!-- Referral System -->
+            <div class="referral-section">
+                <h3><i class="fas fa-users"></i> REFERRAL</h3>
+                <div class="referral-stats">
+                    <div class="referral-stat">
+                        <div class="stat-value">15%</div>
+                        <div class="stat-label">Commission</div>
+                    </div>
+                    <div class="referral-stat">
+                        <div class="stat-value" id="ref-count">0</div>
+                        <div class="stat-label">Referrals</div>
+                    </div>
+                </div>
+                <div class="referral-link-box">
+                    <input type="text" id="referral-link" readonly value="Connect wallet to get link">
+                    <button id="copy-link" class="btn-copy">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area">
+            <!-- Dice Game -->
+            <div id="dice-game" class="game-content active">
+                <div class="game-header">
+                    <h2><i class="fas fa-dice"></i> DICE GAME</h2>
+                    <p class="game-subtitle">Predict the roll and win big!</p>
+                </div>
+
+                <div class="dice-container">
+                    <div class="dice" id="dice">?</div>
+                </div>
+
+                <div class="game-controls">
+                    <div class="bet-controls">
+                        <div class="input-group">
+                            <label for="bet-amount">
+                                <i class="fas fa-coins"></i> Bet Amount (TON)
+                            </label>
+                            <div class="amount-input">
+                                <button class="amount-btn" data-action="decrease">-</button>
+                                <input type="number" id="bet-amount" value="0.1" min="0.1" step="0.1">
+                                <button class="amount-btn" data-action="increase">+</button>
                             </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="dice-target">
+                                <i class="fas fa-bullseye"></i> Roll Under: <span id="target-value">50</span>
+                            </label>
+                            <input type="range" id="dice-target" min="1" max="95" value="50">
                             <div class="multiplier-display">
-                                <span class="multiplier-label">Current Multiplier:</span>
-                                <span class="multiplier-value" id="current-multiplier">2.00x</span>
-                            </div>
-                        </div>
-
-                        <!-- Bet Controls -->
-                        <div class="bet-controls">
-                            <div class="bet-amount">
-                                <h3><i class="fas fa-coins"></i> Bet Amount</h3>
-                                <div class="amount-controls">
-                                    <button class="amount-btn" onclick="adjustBet(-0.1)">-0.1</button>
-                                    <button class="amount-btn" onclick="adjustBet(-0.01)">-0.01</button>
-                                    <div class="amount-input">
-                                        <input type="number" id="bet-amount" value="0.1" min="0.01" step="0.01" onchange="updateBet()">
-                                        <span class="currency">TON</span>
-                                    </div>
-                                    <button class="amount-btn" onclick="adjustBet(0.01)">+0.01</button>
-                                    <button class="amount-btn" onclick="adjustBet(0.1)">+0.1</button>
-                                </div>
-                                <div class="quick-amounts">
-                                    <button class="quick-btn" onclick="setBet(0.1)">0.1</button>
-                                    <button class="quick-btn" onclick="setBet(0.5)">0.5</button>
-                                    <button class="quick-btn" onclick="setBet(1)">1</button>
-                                    <button class="quick-btn" onclick="setBet(5)">5</button>
-                                    <button class="quick-btn" onclick="setBet(10)">10</button>
-                                </div>
-                            </div>
-
-                            <div class="bet-settings">
-                                <h3><i class="fas fa-sliders-h"></i> Bet Settings</h3>
-                                <div class="settings-group">
-                                    <div class="setting">
-                                        <label>Roll Under:</label>
-                                        <div class="slider-container">
-                                            <input type="range" id="dice-target" min="1" max="98" value="50" oninput="updateMultiplier()">
-                                            <span class="slider-value" id="target-value">50</span>
-                                        </div>
-                                    </div>
-                                    <div class="setting">
-                                        <label>Win Chance:</label>
-                                        <span class="value" id="win-chance">49.50%</span>
-                                    </div>
-                                    <div class="setting">
-                                        <label>Payout:</label>
-                                        <span class="value payout" id="payout-amount">0.20 TON</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="action-buttons">
-                            <button class="btn-roll" id="roll-button" onclick="rollDice()">
-                                <i class="fas fa-dice"></i>
-                                <span>ROLL DICE</span>
-                                <div class="btn-glow"></div>
-                            </button>
-                            <button class="btn-auto" onclick="toggleAutoRoll()">
-                                <i class="fas fa-redo"></i>
-                                <span id="auto-text">AUTO ROLL</span>
-                            </button>
-                            <button class="btn-max" onclick="setMaxBet()">
-                                <i class="fas fa-arrow-up"></i>
-                                <span>MAX BET</span>
-                            </button>
-                        </div>
-
-                        <!-- Recent Rolls -->
-                        <div class="recent-rolls">
-                            <h3><i class="fas fa-history"></i> Recent Rolls</h3>
-                            <div class="rolls-list" id="rolls-list">
-                                <!-- Rolls will be added here -->
+                                <span>Multiplier:</span>
+                                <span class="multiplier" id="dice-multiplier">2.00x</span>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Plinko Game -->
-                <div id="plinko-game" class="game-container">
-                    <div class="game-header">
-                        <h2><i class="fas fa-circle-notch"></i> Plinko</h2>
-                        <p class="game-description">Drop balls for massive multipliers</p>
-                    </div>
-                    <div class="plinko-container" id="plinko-container">
-                        <canvas id="plinko-canvas"></canvas>
-                    </div>
-                </div>
-
-                <!-- Mines Game -->
-                <div id="mines-game" class="game-container">
-                    <div class="game-header">
-                        <h2><i class="fas fa-bomb"></i> Mines</h2>
-                        <p class="game-description">Find diamonds, avoid mines</p>
-                    </div>
-                    <div class="mines-container" id="mines-container">
-                        <!-- Mines grid will be generated -->
-                    </div>
-                </div>
-
-                <!-- Crash Game -->
-                <div id="crash-game" class="game-container">
-                    <div class="game-header">
-                        <h2><i class="fas fa-rocket"></i> Crash</h2>
-                        <p class="game-description">Cash out before it crashes</p>
-                    </div>
-                    <div class="crash-container">
-                        <div class="crash-graph" id="crash-graph">
-                            <div class="multiplier-display" id="crash-multiplier">1.00x</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Panel - Info -->
-            <div class="right-panel">
-                <!-- Wallet Connect -->
-                <div class="wallet-section">
-                    <div id="ton-connect-button" class="ton-connect-btn">
-                        <div class="ton-logo">
-                            <img src="https://ton.org/download/ton_symbol.svg" alt="TON">
-                        </div>
-                        <div class="btn-content">
-                            <span class="btn-title">Connect Wallet</span>
-                            <span class="btn-subtitle">Play with TON</span>
-                        </div>
-                        <div class="btn-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-
-                    <div id="wallet-info" class="wallet-info">
-                        <div class="wallet-header">
-                            <div class="wallet-avatar">
-                                <i class="fas fa-wallet"></i>
-                            </div>
-                            <div class="wallet-details">
-                                <span class="wallet-name" id="wallet-name">Tonkeeper</span>
-                                <span class="wallet-balance" id="wallet-balance">0.00 TON</span>
-                            </div>
-                            <button class="btn-disconnect" onclick="disconnectWallet()">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
-                        </div>
-                        <div class="wallet-address" id="wallet-address">
-                            <span>Address:</span>
-                            <code>Connect wallet to see address</code>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Admin Info -->
-                <div class="admin-card">
-                    <div class="admin-header">
-                        <i class="fas fa-user-shield"></i>
-                        <h3>Admin Wallet</h3>
-                    </div>
-                    <div class="admin-address">
-                        <p>All bets go to:</p>
-                        <div class="address-container">
-                            <code id="admin-address">UQDtXe2aK_1i5BzKdaRi0LseTW8PbuvrCcX7qfREHhJ0typh</code>
-                            <button class="btn-copy" onclick="copyAdminAddress()">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
-                        <p class="note"><i class="fas fa-info-circle"></i> Provably fair games</p>
-                    </div>
-                </div>
-
-                <!-- Live Feed -->
-                <div class="live-feed">
-                    <div class="feed-header">
-                        <h3><i class="fas fa-bolt"></i> Live Wins</h3>
-                        <div class="feed-total">
-                            <i class="fas fa-coins"></i>
-                            <span id="feed-total">12.5K TON</span>
-                        </div>
-                    </div>
-                    <div class="feed-list" id="feed-list">
-                        <!-- Wins will be added here -->
-                    </div>
-                </div>
-
-                <!-- Referral Stats -->
-                <div class="referral-card">
-                    <div class="referral-header">
-                        <i class="fas fa-users"></i>
-                        <h3>Referral Program</h3>
-                    </div>
-                    <div class="referral-stats">
-                        <div class="referral-stat">
-                            <div class="stat-value">15%</div>
-                            <div class="stat-label">Commission</div>
-                        </div>
-                        <div class="referral-stat">
-                            <div class="stat-value" id="ref-count">0</div>
-                            <div class="stat-label">Referrals</div>
-                        </div>
-                        <div class="referral-stat">
-                            <div class="stat-value" id="ref-earnings">0</div>
-                            <div class="stat-label">TON Earned</div>
-                        </div>
-                    </div>
-                    <button class="btn-referral" onclick="openReferralModal()">
-                        <i class="fas fa-share-alt"></i>
-                        <span>Get Referral Link</span>
+                    <button id="roll-dice" class="btn-bet btn-primary">
+                        <i class="fas fa-dice"></i> ROLL DICE
                     </button>
                 </div>
-            </div>
-        </main>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-content">
-                <div class="footer-left">
-                    <div class="security-badge">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Provably Fair</span>
+                <div class="result-container" id="dice-result"></div>
+
+                <div class="game-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Wagered</div>
+                        <div class="stat-value">1,245 TON</div>
                     </div>
-                    <div class="security-badge">
-                        <i class="fas fa-lock"></i>
-                        <span>SSL Secured</span>
+                    <div class="stat-card">
+                        <div class="stat-label">Biggest Win</div>
+                        <div class="stat-value">245 TON</div>
                     </div>
-                    <div class="security-badge">
-                        <i class="fas fa-bolt"></i>
-                        <span>Instant Withdrawals</span>
+                    <div class="stat-card">
+                        <div class="stat-label">RTP</div>
+                        <div class="stat-value">97.8%</div>
                     </div>
                 </div>
-                <div class="footer-right">
-                    <button class="footer-btn" onclick="openTerms()">
-                        <i class="fas fa-file-contract"></i>
-                        Terms
-                    </button>
-                    <button class="footer-btn" onclick="openSupport()">
-                        <i class="fas fa-headset"></i>
-                        Support
-                    </button>
-                    <button class="footer-btn" onclick="openFairness()">
-                        <i class="fas fa-balance-scale"></i>
-                        Fairness
-                    </button>
+            </div>
+
+            <!-- Plinko Game -->
+            <div id="plinko-game" class="game-content">
+                <div class="game-header">
+                    <h2><i class="fas fa-circle"></i> PLINKO</h2>
+                    <p class="game-subtitle">Drop balls for massive multipliers!</p>
+                </div>
+                <div class="plinko-board">
+                    <canvas id="plinko-canvas" width="600" height="400"></canvas>
+                </div>
+                <div class="game-controls">
+                    <input type="number" id="plinko-bet" value="0.1" min="0.1" step="0.1" placeholder="Bet amount">
+                    <select id="plinko-risk">
+                        <option value="low">Low Risk (1-10x)</option>
+                        <option value="medium">Medium Risk (1-50x)</option>
+                        <option value="high">High Risk (1-100x)</option>
+                    </select>
+                    <button id="drop-ball" class="btn-bet btn-primary">DROP BALL</button>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>© 2024 TON Casino. All rights reserved. Gambling can be addictive. Play responsibly.</p>
-            </div>
-        </footer>
-    </div>
 
-    <!-- Modals -->
-    <div id="bonus-wheel-modal" class="modal">
-        <div class="modal-content wheel-modal">
-            <button class="close-modal" onclick="closeModal('bonus-wheel-modal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2><i class="fas fa-gift"></i> Daily Bonus Wheel</h2>
-            <div class="wheel-container">
-                <canvas id="wheel" width="400" height="400"></canvas>
-                <div class="wheel-pointer"></div>
+            <!-- Mines Game -->
+            <div id="mines-game" class="game-content">
+                <div class="game-header">
+                    <h2><i class="fas fa-bomb"></i> MINES</h2>
+                    <p class="game-subtitle">Find diamonds, avoid mines!</p>
+                </div>
+                <div class="mines-grid" id="mines-grid">
+                    <!-- 5x5 grid will be generated by JS -->
+                </div>
+                <div class="game-controls">
+                    <input type="number" id="mines-bet" value="0.1" min="0.1" step="0.1" placeholder="Bet amount">
+                    <select id="mines-count">
+                        <option value="3">3 Mines</option>
+                        <option value="5">5 Mines</option>
+                        <option value="10">10 Mines</option>
+                        <option value="15">15 Mines</option>
+                    </select>
+                    <button id="start-mines" class="btn-bet btn-primary">START GAME</button>
+                </div>
             </div>
-            <button class="btn-spin-wheel" id="spin-wheel-btn" onclick="spinWheel()">
-                <i class="fas fa-redo"></i>
-                SPIN WHEEL
-            </button>
-            <p class="cooldown">Next free spin in: <span id="wheel-cooldown">24:00:00</span></p>
+
+            <!-- Crash Game -->
+            <div id="crash-game" class="game-content">
+                <div class="game-header">
+                    <h2><i class="fas fa-chart-line"></i> CRASH</h2>
+                    <p class="game-subtitle">Cash out before it crashes!</p>
+                </div>
+                <div class="crash-graph">
+                    <canvas id="crash-canvas" width="600" height="300"></canvas>
+                    <div class="crash-multiplier" id="crash-multiplier">1.00x</div>
+                </div>
+                <div class="game-controls">
+                    <input type="number" id="crash-bet" value="0.1" min="0.1" step="0.1" placeholder="Bet amount">
+                    <input type="number" id="auto-cashout" value="2.0" min="1.1" step="0.1" placeholder="Auto cashout at">
+                    <button id="place-crash-bet" class="btn-bet btn-primary">PLACE BET</button>
+                    <button id="cashout" class="btn-bet btn-success" disabled>CASHOUT</button>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div id="referral-modal" class="modal">
-        <div class="modal-content referral-modal">
-            <button class="close-modal" onclick="closeModal('referral-modal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2><i class="fas fa-users"></i> Referral Program</h2>
-            <div class="referral-content">
-                <div class="referral-info">
-                    <div class="info-card">
-                        <i class="fas fa-percentage"></i>
-                        <h3>15% Commission</h3>
-                        <p>Earn from every friend's bet</p>
+        <!-- Right Sidebar - Stats -->
+        <div class="sidebar right-sidebar">
+            <h3><i class="fas fa-chart-bar"></i> STATISTICS</h3>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-wallet"></i>
                     </div>
-                    <div class="info-card">
+                    <div class="stat-content">
+                        <div class="stat-label">Your Balance</div>
+                        <div class="stat-value" id="user-balance">0 TON</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
                         <i class="fas fa-coins"></i>
-                        <h3>Instant Payouts</h3>
-                        <p>Real-time commission tracking</p>
                     </div>
-                    <div class="info-card">
-                        <i class="fas fa-infinity"></i>
-                        <h3>No Limits</h3>
-                        <p>Unlimited referral earnings</p>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Bets</div>
+                        <div class="stat-value">2,458</div>
                     </div>
                 </div>
-                <div class="referral-link-section">
-                    <h3>Your Referral Link</h3>
-                    <div class="link-container">
-                        <input type="text" id="referral-link-input" readonly>
-                        <button class="btn-copy-link" onclick="copyReferralLink()">
-                            <i class="fas fa-copy"></i>
-                        </button>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
                     </div>
-                    <div class="share-buttons">
-                        <button class="share-btn" onclick="shareTelegram()">
-                            <i class="fab fa-telegram"></i>
-                            Telegram
-                        </button>
-                        <button class="share-btn" onclick="shareTwitter()">
-                            <i class="fab fa-twitter"></i>
-                            Twitter
-                        </button>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Won</div>
+                        <div class="stat-value">1,245 TON</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Biggest Win</div>
+                        <div class="stat-value">245 TON</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Info -->
+            <div class="admin-info">
+                <h4><i class="fas fa-user-shield"></i> ADMIN INFO</h4>
+                <div class="admin-address">
+                    <p>All bets go to:</p>
+                    <code class="address">UQDtXe2aK_1i5BzKdaRi0LseTW8PbuvrCcX7qfREHhJ0typh</code>
+                    <p class="warning"><i class="fas fa-exclamation-triangle"></i> Play responsibly!</p>
+                </div>
+            </div>
+
+            <!-- Recent Bets -->
+            <div class="recent-bets">
+                <h4><i class="fas fa-history"></i> RECENT BETS</h4>
+                <div class="bets-list">
+                    <div class="bet-item win">
+                        <div class="bet-user">User1</div>
+                        <div class="bet-amount">+2.5 TON</div>
+                    </div>
+                    <div class="bet-item lose">
+                        <div class="bet-user">User2</div>
+                        <div class="bet-amount">-1.0 TON</div>
+                    </div>
+                    <div class="bet-item win">
+                        <div class="bet-user">User3</div>
+                        <div class="bet-amount">+5.2 TON</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="win-modal" class="modal win-modal">
-        <div class="modal-content win-content">
-            <div class="confetti" id="confetti"></div>
-            <div class="win-icon">
-                <i class="fas fa-trophy"></i>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <h3>TON CASINO</h3>
+                <p>Provably fair gaming on TON blockchain</p>
             </div>
-            <h2 class="win-title">WINNER!</h2>
-            <div class="win-amount" id="win-amount">0.00 TON</div>
-            <div class="win-multiplier" id="win-multiplier">2.00x</div>
-            <button class="btn-collect" onclick="closeWinModal()">
-                COLLECT WINNINGS
-            </button>
+            <div class="footer-links">
+                <a href="#"><i class="fab fa-telegram"></i> Telegram</a>
+                <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+                <a href="#"><i class="fas fa-book"></i> Terms</a>
+                <a href="#"><i class="fas fa-shield-alt"></i> Privacy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 TON Casino. All rights reserved. Gambling can be addictive. Play responsibly.</p>
+        </div>
+    </footer>
+
+    <!-- Game Results Modal -->
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-body"></div>
         </div>
     </div>
-
-    <!-- Audio Elements -->
-    <audio id="roll-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3"></audio>
-    <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
-    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3"></audio>
 
     <!-- TON Connect Manifest -->
     <script type="application/json" id="tonconnect-manifest">
         {
-            "name": "TON Casino",
-            "description": "Premium TON Casino with real games",
+            "name": "TonConnect",
+            "description": "This is a sample decentralized application using TonConnect.",
             "url": "https://miladsoft.github.io/ton-connect/",
             "iconUrl": "https://miladsoft.github.io/ton-connect/icon.png",
             "bridgeUrl": "https://bridge.tonapi.io/bridge",
