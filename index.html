@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TON Casino - Telegram Web App</title>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <style>
+      :root {
+        --primary: #0088cc;
+        --secondary: #2b2d42;
+        --accent: #00d4aa;
+        --danger: #ff4757;
+        --success: #1dd1a1;
+        --dark: #0f1419;
+        --light: #f5f6fa;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, var(--dark) 0%, #1a1e2d 100%);
+        color: white;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      /* HEADER */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        margin-bottom: 30px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .logo h1 {
+        font-size: 24px;
+        background: linear-gradient(45deg, var(--accent), var(--primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .balance-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 15px 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .balance-card h3 {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 5px;
+      }
+
+      .balance-amount {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      /* WALLET BUTTON - Твоя кнопка подключения */
+      .wallet-btn {
+        position: relative;
+        z-index: 100;
+      }
+
+      .ton-connect-button {
+        background: linear-gradient(135deg, var(--primary), #00a2ff) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 14px 28px !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        transition: all 0.3s ease !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3) !important;
+      }
+
+      .ton-connect-button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(0, 136, 204, 0.4) !important;
+      }
+
+      /* GAMES TABS */
+      .games-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+      }
+
+      .tab-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .tab-btn.active {
+        background: linear-gradient(135deg, var(--primary), #00a2ff);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      /* GAME CONTAINER */
+      .game-container {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 30px;
+        min-height: 500px;
+      }
+
+      /* CRASH GAME */
+      .crash-game {
+        text-align: center;
+      }
+
+      .crash-multiplier {
+        font-size: 80px;
+        font-weight: 900;
+        margin: 40px 0;
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+      }
+
+      .crash-history {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin: 20px 0;
+      }
+
+      .history-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+
+      .bet-controls {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin: 30px 0;
+      }
+
+      .bet-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .bet-btn.active {
+        background: linear-gradient(135deg, var(--accent), #00ffaa);
+        border-color: var(--accent);
+      }
+
+      .action-btn {
+        background: linear-gradient(135deg, var(--success), #10ac84);
+        color: white;
+        border: none;
+        padding: 20px;
+        border-radius: 15px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.3s ease;
+        margin-top: 20px;
+      }
+
+      .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(29, 209, 161, 0.3);
+      }
+
+      .action-btn.crash {
+        background: linear-gradient(135deg, var(--danger), #ff3838);
+      }
+
+      /* DICE GAME */
+      .dice-game {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .dice-container {
+        width: 150px;
+        height: 150px;
+        background: white;
+        border-radius: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 60px;
+        color: var(--dark);
+        margin: 40px 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .dice-bet-options {
+        display: flex;
+        gap: 20px;
+        margin: 30px 0;
+      }
+
+      .dice-bet-option {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        padding: 15px 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .dice-bet-option.active {
+        border-color: var(--accent);
+        background: rgba(0, 212, 170, 0.1);
+      }
+
+      /* MINES GAME */
+      .mines-game {
+        text-align: center;
+      }
+
+      .mines-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin: 40px auto;
+        max-width: 400px;
+      }
+
+      .mine-cell {
+        aspect-ratio: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .mine-cell.revealed {
+        background: rgba(255, 71, 87, 0.2);
+        border-color: var(--danger);
+      }
+
+      .mine-cell.safe {
+        background: rgba(29, 209, 161, 0.2);
+        border-color: var(--success);
+      }
+
+      .mines-stats {
+        display: flex;
+        justify-content: space-around;
+        margin: 30px 0;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+
+      /* RESPONSIVE */
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+        
+        .header {
+          flex-direction: column;
+          gap: 20px;
+        }
+        
+        .crash-multiplier {
+          font-size: 60px;
+        }
+        
+        .bet-controls {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .mines-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+
+      /* ANIMATIONS */
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+      .pulse {
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes crash {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0); }
+      }
+
+      .crash-animation {
+        animation: crash 0.5s ease-in-out;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="logo">
+          <h1>🎰 TON CASINO</h1>
+        </div>
+        
+        <div class="balance-card">
+          <h3>YOUR BALANCE</h3>
+          <div class="balance-amount" id="balance">0.00 TON</div>
+        </div>
+        
+        <div class="wallet-btn" id="wallet-button"></div>
+      </div>
+
+      <!-- GAMES TABS -->
+      <div class="games-tabs">
+        <button class="tab-btn active" data-game="crash">🚀 CRASH</button>
+        <button class="tab-btn" data-game="dice">🎲 DICE</button>
+        <button class="tab-btn" data-game="mines">💣 MINES</button>
+        <button class="tab-btn" data-game="stats">📊 STATS</button>
+      </div>
+
+      <!-- GAME CONTAINERS -->
+      <div class="game-container">
+        <!-- CRASH GAME -->
+        <div id="crash-game" class="game-content">
+          <div class="crash-game">
+            <h2>CRASH GAME</h2>
+            <div class="crash-multiplier" id="crash-multiplier">1.00x</div>
+            
+            <div class="crash-history" id="crash-history">
+              <!-- History items will be added here -->
+            </div>
+
+            <div class="bet-controls">
+              <button class="bet-btn" data-bet="0.1">0.1 TON</button>
+              <button class="bet-btn" data-bet="0.5">0.5 TON</button>
+              <button class="bet-btn active" data-bet="1">1 TON</button>
+              <button class="bet-btn" data-bet="2">2 TON</button>
+              <button class="bet-btn" data-bet="5">5 TON</button>
+            </div>
+
+            <button class="action-btn crash" id="place-bet">PLACE BET & START GAME</button>
+            <button class="action-btn" id="cash-out" style="display: none;">CASH OUT</button>
+          </div>
+        </div>
+
+        <!-- DICE GAME -->
+        <div id="dice-game" class="game-content" style="display: none;">
+          <div class="dice-game">
+            <h2>DICE GAME</h2>
+            
+            <div class="dice-container" id="dice-result">
+              🎲
+            </div>
+
+            <div class="dice-bet-options">
+              <div class="dice-bet-option active" data-target="under">
+                <div>UNDER 50</div>
+                <div class="stat-value">2x</div>
+              </div>
+              <div class="dice-bet-option" data-target="over">
+                <div>OVER 50</div>
+                <div class="stat-value">2x</div>
+              </div>
+            </div>
+
+            <div class="bet-controls">
+              <button class="bet-btn" data-bet="0.1">0.1 TON</button>
+              <button class="bet-btn active" data-bet="1">1 TON</button>
+              <button class="bet-btn" data-bet="5">5 TON</button>
+            </div>
+
+            <button class="action-btn" id="roll-dice">ROLL DICE</button>
+          </div>
+        </div>
+
+        <!-- MINES GAME -->
+        <div id="mines-game" class="game-content" style="display: none;">
+          <div class="mines-game">
+            <h2>MINES GAME</h2>
+            
+            <div class="mines-stats">
+              <div class="stat-item">
+                <div>MINES</div>
+                <div class="stat-value" id="mines-count">3</div>
+              </div>
+              <div class="stat-item">
+                <div>MULTIPLIER</div>
+                <div class="stat-value" id="mines-multiplier">1.50x</div>
+              </div>
+            </div>
+
+            <div class="mines-grid" id="mines-grid">
+              <!-- 5x5 grid will be generated here -->
+            </div>
+
+            <div class="bet-controls">
+              <button class="bet-btn" data-bet="0.5">0.5 TON</button>
+              <button class="bet-btn active" data-bet="1">1 TON</button>
+              <button class="bet-btn" data-bet="2">2 TON</button>
+            </div>
+
+            <button class="action-btn" id="start-mines">START GAME</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Telegram Web App инициализация
+      const tg = window.Telegram.WebApp;
+      
+      // Инициализация Telegram Web App
+      tg.ready();
+      tg.expand();
+      tg.enableClosingConfirmation();
+      
+      // TON Connect инициализация с твоим манифестом
+      const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://miladsoft.github.io/ton-connect/tonconnect-manifest.json',
+        uiPreferences: {
+          theme: 'DARK'
+        }
+      });
+
+      // Глобальные переменные
+      let currentGame = 'crash';
+      let currentBet = 1;
+      let walletConnected = false;
+      let userBalance = 0;
+
+      // DOM элементы
+      const balanceElement = document.getElementById('balance');
+      const walletButtonContainer = document.getElementById('wallet-button');
+      const placeBetBtn = document.getElementById('place-bet');
+      const cashOutBtn = document.getElementById('cash-out');
+      const rollDiceBtn = document.getElementById('roll-dice');
+      const startMinesBtn = document.getElementById('start-mines');
+      const crashMultiplierElement = document.getElementById('crash-multiplier');
+      const diceResultElement = document.getElementById('dice-result');
+      const minesGridElement = document.getElementById('mines-grid');
+
+      // Инициализация TonConnect кнопки
+      tonConnectUI.setConnectRequestParameters({ state: 'ready' });
+      const walletButton = tonConnectUI.connectWallet({
+        jsBridgeKey: 'tonkeeper'
+      });
+      walletButtonContainer.appendChild(walletButton);
+
+      // Проверка подключения кошелька
+      tonConnectUI.connectionRestored.then(() => {
+        updateWalletInfo();
+      });
+
+      // Слушатель изменения статуса кошелька
+      tonConnectUI.onStatusChange((wallet) => {
+        if (wallet) {
+          walletConnected = true;
+          updateWalletInfo();
+          tg.HapticFeedback.notificationOccurred('success');
+        } else {
+          walletConnected = false;
+          balanceElement.textContent = '0.00 TON';
+          tg.HapticFeedback.notificationOccurred('warning');
+        }
+      });
+
+      // Обновление информации о кошельке
+      async function updateWalletInfo() {
+        const wallet = tonConnectUI.wallet;
+        if (wallet) {
+          try {
+            const response = await fetch(
+              `https://tonapi.io/v2/accounts/${wallet.account.address}/jettons`
+            );
+            const data = await response.json();
+            
+            // Ищем баланс TON
+            const tonBalance = data.balances?.find(b => b.jetton?.symbol === 'TON');
+            if (tonBalance) {
+              userBalance = tonBalance.balance / 1000000000;
+              balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            }
+          } catch (error) {
+            console.error('Error fetching balance:', error);
+          }
+        }
+      }
+
+      // Переключение между играми
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Обновляем активную вкладку
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          // Скрываем все игры
+          document.querySelectorAll('.game-content').forEach(game => {
+            game.style.display = 'none';
+          });
+          
+          // Показываем выбранную игру
+          currentGame = btn.dataset.game;
+          document.getElementById(`${currentGame}-game`).style.display = 'block';
+          
+          // Тактильная обратная связь
+          tg.HapticFeedback.selectionChanged();
+        });
+      });
+
+      // Обработчики ставок
+      document.querySelectorAll('.bet-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentBet = parseFloat(btn.dataset.bet);
+          tg.HapticFeedback.selectionChanged();
+        });
+      });
+
+      // CRASH GAME LOGIC
+      let crashGameActive = false;
+      let crashMultiplier = 1.0;
+      let crashInterval;
+
+      placeBetBtn.addEventListener('click', async () => {
+        if (!walletConnected) {
+          alert('Please connect your wallet first!');
+          return;
+        }
+
+        if (currentBet > userBalance) {
+          alert('Insufficient balance!');
+          return;
+        }
+
+        // Отправляем транзакцию
+        try {
+          const transaction = {
+            messages: [
+              {
+                address: 'UQDtXe2aK_1i5BzKdaRi0LseTW8PbuvrCcX7qfREHhJ0typh',
+                amount: (currentBet * 1000000000).toString(),
+              },
+            ],
+          };
+
+          const result = await tonConnectUI.sendTransaction(transaction);
+          console.log('Bet placed:', result);
+          
+          // Начинаем игру
+          startCrashGame();
+          
+        } catch (error) {
+          console.error('Transaction failed:', error);
+          alert('Failed to place bet!');
+        }
+      });
+
+      function startCrashGame() {
+        crashGameActive = true;
+        crashMultiplier = 1.0;
+        placeBetBtn.style.display = 'none';
+        cashOutBtn.style.display = 'block';
+        
+        crashInterval = setInterval(() => {
+          crashMultiplier += 0.01;
+          crashMultiplierElement.textContent = `${crashMultiplier.toFixed(2)}x`;
+          
+          // 15% шанс краша каждый шаг
+          if (Math.random() < 0.15) {
+            endCrashGame(false);
+          }
+        }, 100);
+      }
+
+      cashOutBtn.addEventListener('click', () => {
+        if (crashGameActive) {
+          endCrashGame(true);
+        }
+      });
+
+      function endCrashGame(cashedOut) {
+        clearInterval(crashInterval);
+        crashGameActive = false;
+        
+        if (cashedOut) {
+          // Выплачиваем выигрыш
+          const winnings = currentBet * crashMultiplier;
+          userBalance += winnings;
+          balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+          
+          tg.HapticFeedback.notificationOccurred('success');
+          alert(`Cashed out at ${crashMultiplier.toFixed(2)}x! Won ${winnings.toFixed(2)} TON`);
+        } else {
+          tg.HapticFeedback.notificationOccurred('error');
+          alert(`Game crashed at ${crashMultiplier.toFixed(2)}x!`);
+        }
+        
+        placeBetBtn.style.display = 'block';
+        cashOutBtn.style.display = 'none';
+        crashMultiplierElement.textContent = '1.00x';
+      }
+
+      // DICE GAME LOGIC
+      rollDiceBtn.addEventListener('click', async () => {
+        if (!walletConnected) {
+          alert('Please connect your wallet first!');
+          return;
+        }
+
+        const target = document.querySelector('.dice-bet-option.active').dataset.target;
+        
+        // Анимация броска
+        diceResultElement.classList.add('pulse');
+        
+        setTimeout(() => {
+          const roll = Math.floor(Math.random() * 100) + 1;
+          diceResultElement.textContent = roll;
+          diceResultElement.classList.remove('pulse');
+          
+          // Проверяем результат
+          const win = (target === 'under' && roll < 50) || (target === 'over' && roll > 50);
+          
+          if (win) {
+            // Отправляем выигрыш
+            sendWinnings(currentBet * 2);
+            tg.HapticFeedback.notificationOccurred('success');
+            alert(`You won! Roll: ${roll}`);
+          } else {
+            tg.HapticFeedback.notificationOccurred('error');
+            alert(`You lost! Roll: ${roll}`);
+          }
+        }, 1000);
+      });
+
+      // MINES GAME LOGIC
+      let minesGameActive = false;
+      let mines = [];
+      let minesRevealed = 0;
+
+      function initializeMinesGrid() {
+        minesGridElement.innerHTML = '';
+        mines = [];
+        
+        const totalCells = 25;
+        const mineCount = parseInt(document.getElementById('mines-count').textContent);
+        
+        // Создаем массив мин
+        for (let i = 0; i < totalCells; i++) {
+          mines[i] = i < mineCount;
+        }
+        
+        // Перемешиваем
+        mines.sort(() => Math.random() - 0.5);
+        
+        // Создаем сетку
+        for (let i = 0; i < totalCells; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'mine-cell';
+          cell.dataset.index = i;
+          cell.textContent = '💎';
+          
+          cell.addEventListener('click', () => revealMine(i));
+          minesGridElement.appendChild(cell);
+        }
+      }
+
+      function revealMine(index) {
+        if (!minesGameActive) return;
+        
+        const cell = document.querySelector(`.mine-cell[data-index="${index}"]`);
+        
+        if (mines[index]) {
+          // Мина - проигрыш
+          cell.classList.add('revealed');
+          cell.textContent = '💥';
+          endMinesGame(false);
+          tg.HapticFeedback.notificationOccurred('error');
+        } else {
+          // Безопасная ячейка
+          cell.classList.add('safe');
+          cell.textContent = '💰';
+          minesRevealed++;
+          
+          // Обновляем множитель
+          const multiplier = 1 + (minesRevealed * 0.25);
+          document.getElementById('mines-multiplier').textContent = `${multiplier.toFixed(2)}x`;
+          
+          tg.HapticFeedback.selectionChanged();
+        }
+      }
+
+      startMinesBtn.addEventListener('click', () => {
+        if (!walletConnected) {
+          alert('Please connect your wallet first!');
+          return;
+        }
+
+        minesGameActive = true;
+        minesRevealed = 0;
+        initializeMinesGrid();
+        startMinesBtn.style.display = 'none';
+        
+        // Обновляем множитель
+        document.getElementById('mines-multiplier').textContent = '1.00x';
+      });
+
+      function endMinesGame(win) {
+        minesGameActive = false;
+        
+        if (win) {
+          const multiplier = 1 + (minesRevealed * 0.25);
+          const winnings = currentBet * multiplier;
+          sendWinnings(winnings);
+          tg.HapticFeedback.notificationOccurred('success');
+          alert(`You won ${winnings.toFixed(2)} TON!`);
+        }
+        
+        startMinesBtn.style.display = 'block';
+      }
+
+      // Функция отправки выигрыша (заглушка - в реальном приложении будет смарт-контракт)
+      function sendWinnings(amount) {
+        console.log(`Sending ${amount} TON to user`);
+        userBalance += amount;
+        balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+      }
+
+      // Инициализация при загрузке
+      document.addEventListener('DOMContentLoaded', () => {
+        // Инициализируем сетку мин
+        initializeMinesGrid();
+        
+        // Создаем историю краша
+        const historyElement = document.getElementById('crash-history');
+        for (let i = 0; i < 5; i++) {
+          const multiplier = (Math.random() * 3 + 1).toFixed(2);
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          item.textContent = `${multiplier}x`;
+          item.style.color = multiplier > 2 ? '#1dd1a1' : '#ff4757';
+          historyElement.appendChild(item);
+        }
+      });
+    </script>
+  </body>
+</html>
