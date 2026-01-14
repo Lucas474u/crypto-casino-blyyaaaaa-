@@ -1,0 +1,91 @@
+.ton-connect-button {
+  background: linear-gradient(135deg, #007AFF 0%, #0051CC 100%) !important;
+  border-radius: 12px !important;
+  padding: 14px 24px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  border: none !important;
+  color: white !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3) !important;
+}
+
+.ton-connect-button:hover {
+  background: linear-gradient(135deg, #0051CC 0%, #003D99 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 25px rgba(0, 122, 255, 0.4) !important;
+}
+
+.ton-connect-button:active {
+  transform: translateY(0) !important;
+}
+
+.ton-connect-button::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDBDNC40NzcgMCAwIDQuNDc3IDAgMTBTNC40NzcgMjAgMTAgMjBTMjAgMTUuNTIzIDIwIDEwQzIwIDQuNDc3IDE1LjUyMyAwIDEwIDBaTTE0Ljg4OCA2LjUyN0w5LjU1MiAxNy4yNjZMNy42MDggMTIuOTk0TDMuMzQ0IDExLjA1TDE0Ljg4OCA2LjUyN1oiIGZpbGw9IiNGRkYiLz4KPC9zdmc+') !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+}
+
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wallet-balance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 16px;
+  color: white;
+}
+
+.ton-icon-small {
+  width: 20px;
+  height: 20px;
+}
+
+.wallet-address {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: monospace;
+}
+
+.btn-disconnect {
+  background: rgba(255, 71, 87, 0.2);
+  border: 1px solid #ff4757;
+  color: #ff4757;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-disconnect:hover {
+  background: rgba(255, 71, 87, 0.3);
+  transform: translateY(-1px);
+}
