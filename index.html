@@ -197,6 +197,8 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             min-height: 500px;
+            position: relative;
+            overflow: hidden;
         }
         
         /* Game-specific styles */
@@ -225,19 +227,52 @@
             justify-content: center;
         }
         
-        .crash-rocket {
-            font-size: 100px;
+        /* Новая анимация ракеты */
+        .crash-rocket-container {
+            position: relative;
+            height: 200px;
             margin: 30px 0;
-            transition: transform 0.3s ease;
+            overflow: hidden;
         }
         
-        .crash-rocket.flying {
-            animation: rocketFly 0.5s infinite alternate;
+        .crash-rocket {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 80px;
+            transition: bottom 0.1s linear;
+            filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.7));
         }
         
-        @keyframes rocketFly {
-            from { transform: translateY(0px); }
-            to { transform: translateY(-10px); }
+        .rocket-fire {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            color: #ff9900;
+            animation: fireFlicker 0.3s infinite alternate;
+        }
+        
+        @keyframes fireFlicker {
+            0% { opacity: 0.8; transform: translateX(-50%) scale(0.9); }
+            100% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+        }
+        
+        .crash-explosion {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .crash-explosion.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(2);
         }
         
         .crash-controls {
@@ -286,9 +321,30 @@
             text-align: center;
         }
         
-        .dice-result {
-            font-size: 72px;
+        .dice-result-container {
+            position: relative;
+            height: 150px;
             margin: 30px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dice-result {
+            font-size: 80px;
+            transition: transform 0.5s ease;
+        }
+        
+        .dice-rolling {
+            animation: diceRoll 1s infinite;
+        }
+        
+        @keyframes diceRoll {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.2); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
         }
         
         .dice-controls {
@@ -349,10 +405,18 @@
             text-align: center;
         }
         
-        .plinko-board {
+        .plinko-board-container {
+            position: relative;
+            height: 400px;
+            margin: 30px 0;
             display: flex;
             justify-content: center;
-            margin: 30px 0;
+        }
+        
+        .plinko-board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .plinko-row {
@@ -370,10 +434,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 700;
-        }
-        
-        .plinko-cell.active {
-            background: var(--primary);
+            font-size: 12px;
         }
         
         .plinko-cell.multiplier {
@@ -387,7 +448,9 @@
             height: 20px;
             background: white;
             border-radius: 50%;
-            transition: all 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            z-index: 10;
         }
         
         .plinko-controls {
@@ -410,7 +473,7 @@
         
         .mine-cell {
             aspect-ratio: 1;
-            background: rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -419,18 +482,28 @@
             cursor: pointer;
             transition: var(--transition);
             user-select: none;
+            border: 2px solid transparent;
         }
         
         .mine-cell:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
         }
         
         .mine-cell.revealed {
-            background: var(--secondary);
+            background: linear-gradient(135deg, var(--secondary) 0%, #27ae60 100%);
+            transform: scale(0.95);
         }
         
         .mine-cell.mine {
-            background: var(--danger);
+            background: linear-gradient(135deg, var(--danger) 0%, #c0392b 100%);
+            animation: mineReveal 0.5s ease;
+        }
+        
+        @keyframes mineReveal {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
         
         .mines-controls {
@@ -540,6 +613,11 @@
             cursor: pointer;
         }
         
+        /* TON Connect Button Container */
+        #ton-connect-button {
+            width: 100%;
+        }
+        
         /* Mobile optimizations */
         @media (max-width: 768px) {
             .app-container {
@@ -570,7 +648,7 @@
             }
             
             .crash-rocket {
-                font-size: 70px;
+                font-size: 60px;
             }
             
             .mines-grid {
@@ -599,18 +677,94 @@
             }
             
             .dice-result {
-                font-size: 48px;
+                font-size: 60px;
             }
             
             .plinko-cell {
                 width: 30px;
                 height: 30px;
-                font-size: 12px;
+                font-size: 10px;
             }
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            display: none;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            max-width: 300px;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-left-color: var(--secondary);
+        }
+        
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+        
+        .toast.warning {
+            border-left-color: var(--warning);
         }
     </style>
 </head>
 <body>
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
     <div class="app-container">
         <!-- Header with Wallet Info -->
         <div class="header">
@@ -625,10 +779,8 @@
                     <div class="balance-amount" id="balance">0 TON</div>
                 </div>
                 
-                <button class="btn btn-primary" id="connect-wallet">
-                    <i class="fas fa-wallet"></i>
-                    <span id="connect-text">Подключить кошелек</span>
-                </button>
+                <!-- TON Connect Button Container -->
+                <div id="ton-connect-button"></div>
             </div>
         </div>
         
@@ -657,7 +809,12 @@
                     <p>Поставьте ставку и заберите до взрыва!</p>
                     
                     <div class="crash-multiplier" id="crash-multiplier">1.00x</div>
-                    <div class="crash-rocket" id="crash-rocket">🚀</div>
+                    
+                    <div class="crash-rocket-container">
+                        <div class="crash-rocket" id="crash-rocket">🚀</div>
+                        <div class="rocket-fire" id="rocket-fire">🔥</div>
+                        <div class="crash-explosion" id="crash-explosion">💥</div>
+                    </div>
                     
                     <div class="crash-controls">
                         <div class="bet-input">
@@ -682,7 +839,9 @@
                     <h2>Dice Game</h2>
                     <p>Угадайте число от 1 до 100</p>
                     
-                    <div class="dice-result" id="dice-result">🎲</div>
+                    <div class="dice-result-container">
+                        <div class="dice-result" id="dice-result">🎲</div>
+                    </div>
                     
                     <div class="dice-controls">
                         <div class="bet-type">
@@ -691,9 +850,14 @@
                         </div>
                         
                         <div class="number-range">
-                            <span id="target-number">50</span>
+                            <span>1</span>
                             <input type="range" class="range-slider" id="dice-slider" min="1" max="99" value="50">
                             <span>100</span>
+                        </div>
+                        
+                        <div class="target-display">
+                            <span>Целевое число: </span>
+                            <span id="target-number">50</span>
                         </div>
                         
                         <div class="bet-input">
@@ -710,8 +874,10 @@
                     <h2>Plinko Game</h2>
                     <p>Бросьте шарик и выиграйте умножитель!</p>
                     
-                    <div class="plinko-board" id="plinko-board">
-                        <!-- Plinko board will be generated here -->
+                    <div class="plinko-board-container">
+                        <div class="plinko-board" id="plinko-board">
+                            <!-- Plinko board will be generated here -->
+                        </div>
                     </div>
                     
                     <div class="plinko-controls">
@@ -771,75 +937,104 @@
             <div class="wallet-info" id="wallet-info">
                 <p><strong>Адрес:</strong> <span id="wallet-address">Не подключен</span></p>
                 <p><strong>Баланс:</strong> <span id="wallet-balance">0 TON</span></p>
+                <p><strong>Сеть:</strong> <span id="wallet-network">-</span></p>
                 <div style="margin-top: 20px;">
                     <button class="btn btn-danger" id="disconnect-wallet">Отключить кошелек</button>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script>
-        // Манифест TON Connect из вашего примера
-        const manifest = {
-            "name": "TonConnect",
-            "description": "This is a sample decentralized application using TonConnect.",
-            "url": "https://miladsoft.github.io/ton-connect/",
-            "iconUrl": "https://miladsoft.github.io/ton-connect/icon.png",
-            "bridgeUrl": "https://bridge.tonapi.io/bridge",
-            "termsUrl": "https://miladsoft.github.io/ton-connect/terms",
-            "privacyUrl": "https://miladsoft.github.io/ton-connect/privacy"
-        };
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
         
-        // Initialize TON Connect UI
+        // Манифест для TON Connect
+        const manifest = {
+            "name": "TON Casino",
+            "description": "Decentralized casino with Crash, Dice, Plinko and Mines games",
+            "url": window.location.origin,
+            "iconUrl": "https://raw.githubusercontent.com/Ton-Payments/tonconnect-manifest/main/tonconnect-icon.png",
+            "bridgeUrl": "https://bridge.tonapi.io/bridge",
+            "termsOfUseUrl": "https://toncasino.com/terms",
+            "privacyPolicyUrl": "https://toncasino.com/privacy"
+        };
+
+        // Инициализация TON Connect UI
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifest: manifest,
-            buttonRootId: 'connect-wallet'
+            buttonRootId: 'ton-connect-button',
+            uiPreferences: {
+                theme: 'DARK',
+                colorsSet: {
+                    [TON_CONNECT_UI.COLORS.BUTTON]: '#0088cc',
+                    [TON_CONNECT_UI.COLORS.BUTTON_HOVER]: '#0077b3',
+                    [TON_CONNECT_UI.COLORS.BUTTON_ACTIVE]: '#006699',
+                    [TON_CONNECT_UI.COLORS.ACCENT]: '#0088cc',
+                    [TON_CONNECT_UI.COLORS.MODAL_BACKGROUND]: '#1a1a2e',
+                    [TON_CONNECT_UI.COLORS.MODAL_OVERLAY]: 'rgba(0, 0, 0, 0.8)'
+                }
+            }
         });
+
+        // ==================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ====================
         
-        // Game state variables
         let currentGame = 'crash';
         let userBalance = 0;
         let walletAddress = null;
+        let walletNetwork = null;
+        
+        // Состояние Crash игры
         let crashInterval = null;
         let crashMultiplier = 1.00;
         let isCrashRunning = false;
         let crashBetAmount = 0;
         let crashBetPlaced = false;
         let autoCashout = 2.00;
+        let crashHeight = 0;
         
+        // Состояние Dice игры
         let diceTarget = 50;
         let diceBetType = 'over';
+        let isDiceRolling = false;
         
+        // Состояние Mines игры
         let minesCount = 3;
         let minesGrid = [];
         let minesRevealed = 0;
         let minesGameActive = false;
+        let minesBetAmount = 0;
         
+        // История ставок
         let betHistory = [];
         
-        // DOM Elements
-        const connectWalletBtn = document.getElementById('connect-wallet');
-        const connectText = document.getElementById('connect-text');
+        // ==================== DOM ЭЛЕМЕНТЫ ====================
+        
+        // Общие элементы
         const balanceElement = document.getElementById('balance');
         const walletModal = document.getElementById('wallet-modal');
         const closeModalBtn = document.getElementById('close-modal');
         const disconnectWalletBtn = document.getElementById('disconnect-wallet');
         const walletAddressElement = document.getElementById('wallet-address');
         const walletBalanceElement = document.getElementById('wallet-balance');
+        const walletNetworkElement = document.getElementById('wallet-network');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const toastElement = document.getElementById('toast');
         
-        // Game elements
+        // Табы игр
         const gameTabs = document.querySelectorAll('.game-tab');
         const gameContents = document.querySelectorAll('.game-content');
         
-        // Crash elements
+        // Crash элементы
         const crashMultiplierElement = document.getElementById('crash-multiplier');
         const crashRocketElement = document.getElementById('crash-rocket');
+        const rocketFireElement = document.getElementById('rocket-fire');
+        const crashExplosionElement = document.getElementById('crash-explosion');
         const crashBetInput = document.getElementById('crash-bet');
         const placeCrashBetBtn = document.getElementById('place-crash-bet');
         const cashoutBtn = document.getElementById('cashout-btn');
         const autoCashoutInput = document.getElementById('auto-cashout');
         
-        // Dice elements
+        // Dice элементы
         const diceResultElement = document.getElementById('dice-result');
         const diceBetTypeBtns = document.querySelectorAll('.bet-type-btn');
         const diceSlider = document.getElementById('dice-slider');
@@ -847,66 +1042,127 @@
         const diceBetInput = document.getElementById('dice-bet');
         const placeDiceBetBtn = document.getElementById('place-dice-bet');
         
-        // Plinko elements
+        // Plinko элементы
         const plinkoBoard = document.getElementById('plinko-board');
         const plinkoBetInput = document.getElementById('plinko-bet');
         const placePlinkoBetBtn = document.getElementById('place-plinko-bet');
         
-        // Mines elements
+        // Mines элементы
         const minesGridElement = document.getElementById('mines-grid');
         const minesSlider = document.getElementById('mines-slider');
         const minesCountElement = document.getElementById('mines-count');
         const minesBetInput = document.getElementById('mines-bet');
         const placeMinesBetBtn = document.getElementById('place-mines-bet');
         
-        // History elements
+        // История
         const historyItemsElement = document.getElementById('history-items');
         
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeEventListeners();
-            generatePlinkoBoard();
-            updateMinesGrid();
-            checkWalletConnection();
+        // ==================== УТИЛИТЫ ====================
+        
+        // Показать уведомление
+        function showToast(message, type = 'info') {
+            toastElement.textContent = message;
+            toastElement.className = `toast ${type}`;
+            toastElement.classList.add('show');
             
-            // Set initial bet amounts based on balance
-            if (userBalance > 0) {
-                const suggestedBet = Math.min(10, Math.floor(userBalance * 0.1));
-                crashBetInput.value = suggestedBet;
-                diceBetInput.value = suggestedBet;
-                plinkoBetInput.value = suggestedBet;
-                minesBetInput.value = suggestedBet;
+            setTimeout(() => {
+                toastElement.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Показать/скрыть загрузку
+        function showLoading() {
+            loadingOverlay.classList.add('active');
+        }
+        
+        function hideLoading() {
+            loadingOverlay.classList.remove('active');
+        }
+        
+        // Проверка подключения кошелька
+        function requireWallet() {
+            if (!walletAddress) {
+                showToast('Пожалуйста, подключите кошелек', 'error');
+                return false;
+            }
+            return true;
+        }
+        
+        // Проверка достаточности баланса
+        function checkBalance(amount) {
+            if (amount > userBalance) {
+                showToast('Недостаточно средств на балансе', 'error');
+                return false;
+            }
+            return true;
+        }
+        
+        // Форматирование адреса
+        function shortenAddress(address) {
+            return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : 'Не подключен';
+        }
+        
+        // Обновление баланса в интерфейсе
+        function updateBalanceDisplay() {
+            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            if (walletBalanceElement) {
+                walletBalanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            }
+        }
+        
+        // ==================== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ====================
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                showLoading();
+                
+                // Инициализация игр
+                initializeEventListeners();
+                generatePlinkoBoard();
+                updateMinesGrid();
+                
+                // Проверка подключения кошелька
+                await checkWalletConnection();
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Ошибка инициализации:', error);
+                hideLoading();
+                showToast('Ошибка инициализации приложения', 'error');
             }
         });
         
-        // Initialize all event listeners
+        // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
+        
         function initializeEventListeners() {
-            // Game tab switching
+            // Переключение игр
             gameTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    const game = tab.getAttribute('data-game');
+                    const game = tab.dataset.game;
                     switchGame(game);
                 });
             });
             
-            // Wallet connection
-            connectWalletBtn.addEventListener('click', toggleWalletModal);
-            closeModalBtn.addEventListener('click', () => walletModal.classList.remove('active'));
+            // Модальное окно кошелька
+            closeModalBtn.addEventListener('click', () => {
+                walletModal.classList.remove('active');
+            });
+            
             disconnectWalletBtn.addEventListener('click', disconnectWallet);
             
-            // Crash game
+            // Crash игра
             placeCrashBetBtn.addEventListener('click', placeCrashBet);
             cashoutBtn.addEventListener('click', cashoutCrashBet);
             autoCashoutInput.addEventListener('input', function() {
                 autoCashout = parseFloat(this.value) || 2.00;
             });
             
-            // Dice game
+            // Dice игра
             diceBetTypeBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     diceBetTypeBtns.forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    diceBetType = this.getAttribute('data-type');
+                    diceBetType = this.dataset.type;
                 });
             });
             
@@ -917,10 +1173,10 @@
             
             placeDiceBetBtn.addEventListener('click', placeDiceBet);
             
-            // Plinko game
+            // Plinko игра
             placePlinkoBetBtn.addEventListener('click', placePlinkoBet);
             
-            // Mines game
+            // Mines игра
             minesSlider.addEventListener('input', function() {
                 minesCount = parseInt(this.value);
                 minesCountElement.textContent = minesCount;
@@ -928,145 +1184,183 @@
             
             placeMinesBetBtn.addEventListener('click', startMinesGame);
             
-            // TON Connect events
-            tonConnectUI.onStatusChange(wallet => {
-                if (wallet) {
-                    walletConnected(wallet);
-                } else {
-                    walletDisconnected();
-                }
-            });
+            // События TON Connect
+            tonConnectUI.onStatusChange(handleWalletStatusChange);
         }
         
-        // Switch between games
-        function switchGame(game) {
-            currentGame = game;
-            
-            // Update tabs
-            gameTabs.forEach(tab => {
-                if (tab.getAttribute('data-game') === game) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
-            
-            // Update game content
-            gameContents.forEach(content => {
-                if (content.id === `${game}-game`) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-            
-            // Stop crash game if switching away
-            if (game !== 'crash' && isCrashRunning) {
-                stopCrashGame();
-            }
-        }
+        // ==================== УПРАВЛЕНИЕ КОШЕЛЬКОМ ====================
         
-        // Check if wallet is already connected
         async function checkWalletConnection() {
-            const wallet = await tonConnectUI.getWallet();
-            if (wallet) {
-                walletConnected(wallet);
+            try {
+                const wallet = await tonConnectUI.getWallet();
+                if (wallet) {
+                    await handleWalletStatusChange(wallet);
+                }
+            } catch (error) {
+                console.error('Ошибка проверки кошелька:', error);
             }
         }
         
-        // Handle wallet connection
+        async function handleWalletStatusChange(wallet) {
+            if (wallet) {
+                await walletConnected(wallet);
+            } else {
+                walletDisconnected();
+            }
+        }
+        
         async function walletConnected(wallet) {
-            walletAddress = wallet.account.address;
-            walletAddressElement.textContent = shortenAddress(walletAddress);
-            
-            // Fetch balance using TON API v2
             try {
-                const response = await fetch(`https://tonapi.io/v2/accounts/${walletAddress}`);
-                const data = await response.json();
-                userBalance = data.balance ? data.balance / 1000000000 : 0;
-                balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
-                walletBalanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                showLoading();
                 
-                // Update bet inputs
+                walletAddress = wallet.account.address;
+                walletNetwork = wallet.account.chain;
+                
+                // Обновление интерфейса
+                walletAddressElement.textContent = shortenAddress(walletAddress);
+                walletNetworkElement.textContent = walletNetwork === '-239' ? 'Mainnet' : 'Testnet';
+                
+                // Получение баланса
+                await fetchBalance();
+                
+                // Обновление доступных ставок
+                updateBetAmounts();
+                
+                showToast('Кошелек успешно подключен', 'success');
+                walletModal.classList.remove('active');
+            } catch (error) {
+                console.error('Ошибка подключения кошелька:', error);
+                showToast('Ошибка подключения кошелька', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        function walletDisconnected() {
+            walletAddress = null;
+            walletNetwork = null;
+            userBalance = 0;
+            
+            // Обновление интерфейса
+            walletAddressElement.textContent = 'Не подключен';
+            walletNetworkElement.textContent = '-';
+            updateBalanceDisplay();
+            
+            // Сброс игр
+            resetAllGames();
+            
+            showToast('Кошелек отключен', 'warning');
+        }
+        
+        async function fetchBalance() {
+            if (!walletAddress) return;
+            
+            try {
+                // Используем публичный TON API
+                const response = await fetch(`https://tonapi.io/v2/accounts/${walletAddress}`);
+                if (!response.ok) throw new Error('Ошибка сети');
+                
+                const data = await response.json();
+                if (data.balance) {
+                    // Конвертируем нанотоны в TON (1 TON = 1e9 нанотонов)
+                    userBalance = parseInt(data.balance) / 1000000000;
+                } else {
+                    userBalance = 0;
+                }
+                
+                updateBalanceDisplay();
+            } catch (error) {
+                console.error('Ошибка получения баланса:', error);
+                // Используем демо-баланс для тестирования
+                userBalance = 100;
+                updateBalanceDisplay();
+                showToast('Используется демо-режим', 'warning');
+            }
+        }
+        
+        async function disconnectWallet() {
+            try {
+                await tonConnectUI.disconnect();
+                walletModal.classList.remove('active');
+            } catch (error) {
+                console.error('Ошибка отключения:', error);
+                showToast('Ошибка отключения кошелька', 'error');
+            }
+        }
+        
+        function updateBetAmounts() {
+            if (userBalance > 0) {
                 const suggestedBet = Math.min(10, Math.floor(userBalance * 0.1));
                 crashBetInput.value = suggestedBet;
                 diceBetInput.value = suggestedBet;
                 plinkoBetInput.value = suggestedBet;
                 minesBetInput.value = suggestedBet;
-            } catch (error) {
-                console.error('Error fetching balance:', error);
-                userBalance = 0;
             }
+        }
+        
+        // ==================== УПРАВЛЕНИЕ ИГРАМИ ====================
+        
+        function switchGame(game) {
+            currentGame = game;
             
-            connectText.textContent = 'Кошелек подключен';
-            connectWalletBtn.innerHTML = '<i class="fas fa-check"></i> Кошелек подключен';
-        }
-        
-        // Handle wallet disconnection
-        function walletDisconnected() {
-            walletAddress = null;
-            userBalance = 0;
-            balanceElement.textContent = '0 TON';
-            walletBalanceElement.textContent = '0 TON';
-            walletAddressElement.textContent = 'Не подключен';
-            connectText.textContent = 'Подключить кошелек';
-            connectWalletBtn.innerHTML = '<i class="fas fa-wallet"></i> Подключить кошелек';
-            walletModal.classList.remove('active');
-        }
-        
-        // Toggle wallet modal
-        function toggleWalletModal() {
-            if (walletAddress) {
-                walletModal.classList.add('active');
-            } else {
-                tonConnectUI.openModal();
+            // Обновление табов
+            gameTabs.forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.game === game);
+            });
+            
+            // Обновление контента
+            gameContents.forEach(content => {
+                content.classList.toggle('active', content.id === `${game}-game`);
+            });
+            
+            // Остановка Crash игры при переключении
+            if (game !== 'crash' && isCrashRunning) {
+                stopCrashGame();
             }
         }
         
-        // Disconnect wallet
-        async function disconnectWallet() {
-            await tonConnectUI.disconnect();
-            walletModal.classList.remove('active');
+        function resetAllGames() {
+            stopCrashGame();
+            resetDiceGame();
+            resetMinesGame();
         }
         
-        // Shorten wallet address for display
-        function shortenAddress(address) {
-            return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-        }
+        // ==================== CRASH ИГРА ====================
         
-        // CRASH GAME FUNCTIONS
         function placeCrashBet() {
-            if (!walletAddress) {
-                alert('Пожалуйста, подключите кошелек сначала');
-                return;
-            }
+            if (!requireWallet()) return;
             
             crashBetAmount = parseFloat(crashBetInput.value);
             if (isNaN(crashBetAmount) || crashBetAmount < 1) {
-                alert('Пожалуйста, введите корректную сумму ставки');
+                showToast('Введите корректную сумму ставки', 'error');
                 return;
             }
             
-            if (crashBetAmount > userBalance) {
-                alert('Недостаточно средств на балансе');
-                return;
-            }
+            if (!checkBalance(crashBetAmount)) return;
             
-            // Deduct bet amount from balance (simulated)
+            // Списываем ставку
             userBalance -= crashBetAmount;
-            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            updateBalanceDisplay();
             
+            // Настройка игры
             crashBetPlaced = true;
             placeCrashBetBtn.disabled = true;
             cashoutBtn.disabled = false;
             crashMultiplier = 1.00;
+            crashHeight = 0;
+            
+            // Сброс анимации
             crashMultiplierElement.textContent = '1.00x';
             crashMultiplierElement.style.color = '#2ecc71';
-            crashRocketElement.classList.add('flying');
+            crashRocketElement.style.bottom = '0px';
+            rocketFireElement.style.display = 'block';
+            crashExplosionElement.classList.remove('show');
             
-            // Start crash sequence
+            // Запуск игры
             isCrashRunning = true;
             startCrashGame();
+            
+            showToast(`Ставка ${crashBetAmount} TON принята!`, 'success');
         }
         
         function startCrashGame() {
@@ -1076,22 +1370,26 @@
             crashInterval = setInterval(() => {
                 time += 0.05;
                 
-                // Increase multiplier with random acceleration
+                // Увеличение множителя
                 const baseIncrement = 0.01 * speed;
-                const randomFactor = 1 + (Math.random() * 0.5 - 0.25); // ±25% randomness
+                const randomFactor = 1 + (Math.random() * 0.5 - 0.25);
                 const increment = baseIncrement * randomFactor;
                 
                 crashMultiplier += increment;
                 
-                // Randomly accelerate
+                // Анимация ракеты
+                crashHeight += increment * 10;
+                crashRocketElement.style.bottom = `${crashHeight}px`;
+                
+                // Случайное ускорение
                 if (Math.random() < 0.1) {
                     speed = Math.min(speed + 0.1, 3);
                 }
                 
-                // Display multiplier
+                // Отображение множителя
                 crashMultiplierElement.textContent = `${crashMultiplier.toFixed(2)}x`;
                 
-                // Change color based on multiplier
+                // Изменение цвета
                 if (crashMultiplier >= 10) {
                     crashMultiplierElement.style.color = '#f39c12';
                 } else if (crashMultiplier >= 5) {
@@ -1100,37 +1398,39 @@
                     crashMultiplierElement.style.color = '#2ecc71';
                 }
                 
-                // Check for auto cashout
+                // Проверка автовывода
                 if (crashBetPlaced && crashMultiplier >= autoCashout) {
                     cashoutCrashBet();
                 }
                 
-                // Calculate crash probability
-                // Higher multiplier = higher crash chance
-                let crashProbability = 0;
+                // Расчет вероятности взрыва
+                let crashProbability = calculateCrashProbability(crashMultiplier, time);
                 
-                // Base formula for crash chance
-                if (crashMultiplier < 1.1) {
-                    crashProbability = 0.01; // 1% chance to crash immediately at 1.00x
-                } else if (crashMultiplier < 2) {
-                    crashProbability = 0.005 * (crashMultiplier - 1);
-                } else if (crashMultiplier < 5) {
-                    crashProbability = 0.005 + 0.002 * (crashMultiplier - 2);
-                } else {
-                    crashProbability = 0.011 + 0.003 * (crashMultiplier - 5);
-                }
-                
-                // Add time factor - the longer it runs, the higher crash chance
-                crashProbability += time * 0.0005;
-                
-                // Cap at 5% max probability per tick
-                crashProbability = Math.min(crashProbability, 0.05);
-                
-                // Random crash
+                // Случайный взрыв
                 if (Math.random() < crashProbability) {
                     crashGame();
                 }
             }, 50);
+        }
+        
+        function calculateCrashProbability(multiplier, time) {
+            let probability = 0;
+            
+            if (multiplier < 1.1) {
+                probability = 0.01; // 1% шанс взрыва на 1.00x
+            } else if (multiplier < 2) {
+                probability = 0.005 * (multiplier - 1);
+            } else if (multiplier < 5) {
+                probability = 0.005 + 0.002 * (multiplier - 2);
+            } else {
+                probability = 0.011 + 0.003 * (multiplier - 5);
+            }
+            
+            // Учет времени
+            probability += time * 0.0005;
+            
+            // Максимум 5% за тик
+            return Math.min(probability, 0.05);
         }
         
         function cashoutCrashBet() {
@@ -1138,11 +1438,11 @@
             
             const winAmount = crashBetAmount * crashMultiplier;
             userBalance += winAmount;
-            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            updateBalanceDisplay();
             
             addToHistory('crash', crashMultiplier.toFixed(2), true, winAmount);
             
-            alert(`Вы успешно забрали ${winAmount.toFixed(2)} TON (${crashMultiplier.toFixed(2)}x)`);
+            showToast(`Вы успешно забрали ${winAmount.toFixed(2)} TON (${crashMultiplier.toFixed(2)}x)!`, 'success');
             resetCrashGame();
         }
         
@@ -1150,19 +1450,17 @@
             clearInterval(crashInterval);
             
             if (crashBetPlaced) {
-                // Player loses bet
+                // Игрок проиграл
                 addToHistory('crash', '1.00x', false, 0);
-                alert(`Ракета взорвалась на ${crashMultiplier.toFixed(2)}x! Вы проиграли ставку.`);
+                showToast(`Ракета взорвалась на ${crashMultiplier.toFixed(2)}x! Вы проиграли ставку.`, 'error');
             }
             
-            // Show explosion
-            crashMultiplierElement.textContent = '1.00x БУМ!';
-            crashMultiplierElement.style.color = '#e74c3c';
-            crashRocketElement.textContent = '💥';
-            crashRocketElement.classList.remove('flying');
+            // Анимация взрыва
+            rocketFireElement.style.display = 'none';
+            crashExplosionElement.classList.add('show');
             
+            // Сброс через 2 секунды
             setTimeout(() => {
-                crashRocketElement.textContent = '🚀';
                 resetCrashGame();
             }, 2000);
         }
@@ -1173,9 +1471,11 @@
             crashBetPlaced = false;
             placeCrashBetBtn.disabled = false;
             cashoutBtn.disabled = true;
-            crashRocketElement.classList.remove('flying');
+            crashExplosionElement.classList.remove('show');
+            rocketFireElement.style.display = 'block';
+            crashRocketElement.style.bottom = '0px';
             
-            // Reset after 3 seconds
+            // Сброс через 3 секунды
             setTimeout(() => {
                 crashMultiplierElement.textContent = '1.00x';
                 crashMultiplierElement.style.color = '#2ecc71';
@@ -1188,44 +1488,42 @@
             crashBetPlaced = false;
             placeCrashBetBtn.disabled = false;
             cashoutBtn.disabled = true;
-            crashRocketElement.classList.remove('flying');
+            rocketFireElement.style.display = 'block';
+            crashRocketElement.style.bottom = '0px';
         }
         
-        // DICE GAME FUNCTIONS
+        // ==================== DICE ИГРА ====================
+        
         function placeDiceBet() {
-            if (!walletAddress) {
-                alert('Пожалуйста, подключите кошелек сначала');
-                return;
-            }
+            if (!requireWallet()) return;
+            if (isDiceRolling) return;
             
             const betAmount = parseFloat(diceBetInput.value);
             if (isNaN(betAmount) || betAmount < 1) {
-                alert('Пожалуйста, введите корректную сумму ставки');
+                showToast('Введите корректную сумму ставки', 'error');
                 return;
             }
             
-            if (betAmount > userBalance) {
-                alert('Недостаточно средств на балансе');
-                return;
-            }
+            if (!checkBalance(betAmount)) return;
             
-            // Deduct bet amount
+            // Списываем ставку
             userBalance -= betAmount;
-            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            updateBalanceDisplay();
             
-            // Show rolling animation
-            diceResultElement.textContent = '🎲';
-            diceResultElement.style.animation = 'none';
-            setTimeout(() => {
-                diceResultElement.style.animation = 'roll 1s ease-in-out';
-            }, 10);
+            // Анимация броска
+            isDiceRolling = true;
+            diceResultElement.classList.add('dice-rolling');
+            placeDiceBetBtn.disabled = true;
             
-            // Roll dice after animation
+            // Бросок через 1 секунду
             setTimeout(() => {
                 const diceRoll = Math.floor(Math.random() * 100) + 1;
+                
+                // Остановка анимации
+                diceResultElement.classList.remove('dice-rolling');
                 diceResultElement.textContent = `🎲 ${diceRoll}`;
                 
-                // Calculate win
+                // Расчет выигрыша
                 let win = false;
                 let multiplier = 0;
                 
@@ -1237,34 +1535,47 @@
                     multiplier = (99 / diceTarget).toFixed(2);
                 }
                 
-                // Check for exact number (instant loss)
+                // Точное число = проигрыш
                 if (diceRoll === diceTarget) {
                     win = false;
                 }
                 
-                // Process result
+                // Обработка результата
                 if (win) {
                     const winAmount = betAmount * multiplier;
                     userBalance += winAmount;
-                    balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                    updateBalanceDisplay();
                     
                     diceResultElement.style.color = '#2ecc71';
                     addToHistory('dice', `${multiplier}x`, true, winAmount);
-                    alert(`Вы выиграли ${winAmount.toFixed(2)} TON (${multiplier}x)!`);
+                    showToast(`Вы выиграли ${winAmount.toFixed(2)} TON (${multiplier}x)!`, 'success');
                 } else {
                     diceResultElement.style.color = '#e74c3c';
                     addToHistory('dice', '0x', false, 0);
-                    alert('Вы проиграли ставку');
+                    showToast('Вы проиграли ставку', 'error');
                 }
                 
-                // Reset color after 2 seconds
+                // Сброс цвета
                 setTimeout(() => {
                     diceResultElement.style.color = '';
+                    diceResultElement.textContent = '🎲';
+                    isDiceRolling = false;
+                    placeDiceBetBtn.disabled = false;
                 }, 2000);
+                
             }, 1000);
         }
         
-        // PLINKO GAME FUNCTIONS
+        function resetDiceGame() {
+            isDiceRolling = false;
+            placeDiceBetBtn.disabled = false;
+            diceResultElement.classList.remove('dice-rolling');
+            diceResultElement.textContent = '🎲';
+            diceResultElement.style.color = '';
+        }
+        
+        // ==================== PLINKO ИГРА ====================
+        
         function generatePlinkoBoard() {
             plinkoBoard.innerHTML = '';
             const rows = 10;
@@ -1277,7 +1588,7 @@
                     const cell = document.createElement('div');
                     cell.className = 'plinko-cell';
                     
-                    // Assign multipliers to bottom row
+                    // Множители для нижнего ряда
                     if (row === rows - 1) {
                         const multipliers = [0.2, 0.5, 1, 2, 5, 2, 1, 0.5, 0.2];
                         const midPoint = Math.floor(row / 2);
@@ -1297,44 +1608,37 @@
         }
         
         function placePlinkoBet() {
-            if (!walletAddress) {
-                alert('Пожалуйста, подключите кошелек сначала');
-                return;
-            }
+            if (!requireWallet()) return;
             
             const betAmount = parseFloat(plinkoBetInput.value);
             if (isNaN(betAmount) || betAmount < 1) {
-                alert('Пожалуйста, введите корректную сумму ставки');
+                showToast('Введите корректную сумму ставки', 'error');
                 return;
             }
             
-            if (betAmount > userBalance) {
-                alert('Недостаточно средств на балансе');
-                return;
-            }
+            if (!checkBalance(betAmount)) return;
             
-            // Deduct bet amount
+            // Списываем ставку
             userBalance -= betAmount;
-            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            updateBalanceDisplay();
             
-            // Simulate ball drop
+            // Симуляция падения шарика
             simulatePlinkoDrop(betAmount);
         }
         
         function simulatePlinkoDrop(betAmount) {
             const rows = 10;
             let position = Math.floor(rows / 2);
-            const path = [];
             
-            // Create ball element
+            // Создание шарика
             const ball = document.createElement('div');
             ball.className = 'plinko-ball';
-            plinkoBoard.appendChild(ball);
+            plinkoBoard.parentElement.appendChild(ball);
             
-            // Animate ball drop
+            // Анимация падения
             let row = 0;
             const dropInterval = setInterval(() => {
-                // Move ball down
+                // Позиция шарика
                 const cellSize = 40;
                 const top = row * cellSize + 20;
                 const left = position * cellSize + (row * 20);
@@ -1342,10 +1646,9 @@
                 ball.style.top = `${top}px`;
                 ball.style.left = `${left}px`;
                 
-                path.push(position);
                 row++;
                 
-                // Randomly move left or right for next row
+                // Случайное движение влево/вправо
                 if (row < rows) {
                     if (Math.random() < 0.5) {
                         position = Math.max(0, position - 1);
@@ -1354,11 +1657,11 @@
                     }
                 }
                 
-                // Reached bottom
+                // Достигнут низ
                 if (row >= rows) {
                     clearInterval(dropInterval);
                     
-                    // Calculate result based on final position
+                    // Расчет результата
                     const multipliers = [0.2, 0.5, 1, 2, 5, 2, 1, 0.5, 0.2];
                     const resultIndex = position - (rows - Math.floor(multipliers.length / 2));
                     
@@ -1370,30 +1673,31 @@
                     const winAmount = betAmount * multiplier;
                     
                     setTimeout(() => {
-                        // Remove ball
+                        // Удаление шарика
                         ball.remove();
                         
-                        // Process result
+                        // Обработка результата
                         if (multiplier > 0) {
                             userBalance += winAmount;
-                            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                            updateBalanceDisplay();
                             addToHistory('plinko', `${multiplier}x`, true, winAmount);
-                            alert(`Вы выиграли ${winAmount.toFixed(2)} TON (${multiplier}x)!`);
+                            showToast(`Вы выиграли ${winAmount.toFixed(2)} TON (${multiplier}x)!`, 'success');
                         } else {
                             addToHistory('plinko', '0x', false, 0);
-                            alert('Вы проиграли ставку');
+                            showToast('Вы проиграли ставку', 'error');
                         }
                     }, 500);
                 }
             }, 200);
         }
         
-        // MINES GAME FUNCTIONS
+        // ==================== MINES ИГРА ====================
+        
         function updateMinesGrid() {
             minesGridElement.innerHTML = '';
             minesGrid = [];
             
-            // Create 5x5 grid
+            // Создание сетки 5x5
             for (let i = 0; i < 25; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'mine-cell';
@@ -1412,27 +1716,22 @@
         }
         
         function startMinesGame() {
-            if (!walletAddress) {
-                alert('Пожалуйста, подключите кошелек сначала');
-                return;
-            }
+            if (!requireWallet()) return;
             
             const betAmount = parseFloat(minesBetInput.value);
             if (isNaN(betAmount) || betAmount < 1) {
-                alert('Пожалуйста, введите корректную сумму ставки');
+                showToast('Введите корректную сумму ставки', 'error');
                 return;
             }
             
-            if (betAmount > userBalance) {
-                alert('Недостаточно средств на балансе');
-                return;
-            }
+            if (!checkBalance(betAmount)) return;
             
-            // Deduct bet amount
+            // Списываем ставку
+            minesBetAmount = betAmount;
             userBalance -= betAmount;
-            balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+            updateBalanceDisplay();
             
-            // Initialize game
+            // Инициализация игры
             minesGameActive = true;
             minesRevealed = 0;
             updateMinesGrid();
@@ -1440,7 +1739,7 @@
             minesSlider.disabled = true;
             minesBetInput.disabled = true;
             
-            // Place mines randomly
+            // Размещение мин
             let minesPlaced = 0;
             while (minesPlaced < minesCount) {
                 const randomIndex = Math.floor(Math.random() * 25);
@@ -1449,6 +1748,8 @@
                     minesPlaced++;
                 }
             }
+            
+            showToast(`Игра началась! Найдите ${25 - minesCount} бриллиантов`, 'success');
         }
         
         function revealMineCell(index) {
@@ -1459,11 +1760,11 @@
             minesRevealed++;
             
             if (minesGrid[index].isMine) {
-                // Hit a mine - game over
+                // Наступили на мину
                 cell.textContent = '💣';
                 cell.classList.add('mine');
                 
-                // Reveal all mines
+                // Показать все мины
                 minesGrid.forEach((cellData, i) => {
                     if (cellData.isMine) {
                         minesGridElement.children[i].textContent = '💣';
@@ -1471,28 +1772,22 @@
                     }
                 });
                 
-                minesGameActive = false;
-                placeMinesBetBtn.disabled = false;
-                minesSlider.disabled = false;
-                minesBetInput.disabled = false;
-                
-                addToHistory('mines', '0x', false, 0);
-                alert('Вы наткнулись на мину! Игра окончена.');
+                endMinesGame(false);
             } else {
-                // Safe cell
+                // Безопасная клетка
                 cell.classList.add('revealed');
                 
-                // Check if all safe cells are revealed
+                // Проверка выигрыша
                 const safeCells = 25 - minesCount;
                 if (minesRevealed === safeCells) {
-                    // Player wins
+                    // Все бриллианты найдены
                     const multiplier = (1 + (minesCount / 3)).toFixed(2);
-                    const winAmount = parseFloat(minesBetInput.value) * multiplier;
+                    const winAmount = minesBetAmount * multiplier;
                     
                     userBalance += winAmount;
-                    balanceElement.textContent = `${userBalance.toFixed(2)} TON`;
+                    updateBalanceDisplay();
                     
-                    // Reveal all mines
+                    // Показать все мины
                     minesGrid.forEach((cellData, i) => {
                         if (cellData.isMine) {
                             minesGridElement.children[i].textContent = '💣';
@@ -1500,18 +1795,37 @@
                         }
                     });
                     
-                    minesGameActive = false;
-                    placeMinesBetBtn.disabled = false;
-                    minesSlider.disabled = false;
-                    minesBetInput.disabled = false;
-                    
-                    addToHistory('mines', `${multiplier}x`, true, winAmount);
-                    alert(`Вы нашли все бриллианты! Выигрыш: ${winAmount.toFixed(2)} TON (${multiplier}x)`);
+                    endMinesGame(true, winAmount, multiplier);
                 }
             }
         }
         
-        // HISTORY FUNCTIONS
+        function endMinesGame(win, winAmount = 0, multiplier = 0) {
+            minesGameActive = false;
+            placeMinesBetBtn.disabled = false;
+            minesSlider.disabled = false;
+            minesBetInput.disabled = false;
+            
+            if (win) {
+                addToHistory('mines', `${multiplier}x`, true, winAmount);
+                showToast(`Вы нашли все бриллианты! Выигрыш: ${winAmount.toFixed(2)} TON (${multiplier}x)`, 'success');
+            } else {
+                addToHistory('mines', '0x', false, 0);
+                showToast('Вы наткнулись на мину! Игра окончена.', 'error');
+            }
+        }
+        
+        function resetMinesGame() {
+            minesGameActive = false;
+            minesRevealed = 0;
+            placeMinesBetBtn.disabled = false;
+            minesSlider.disabled = false;
+            minesBetInput.disabled = false;
+            updateMinesGrid();
+        }
+        
+        // ==================== ИСТОРИЯ СТАВОК ====================
+        
         function addToHistory(game, multiplier, win, amount) {
             const historyItem = {
                 game,
@@ -1523,7 +1837,7 @@
             
             betHistory.unshift(historyItem);
             
-            // Keep only last 10 items
+            // Храним только последние 10 ставок
             if (betHistory.length > 10) {
                 betHistory.pop();
             }
@@ -1558,34 +1872,22 @@
             });
         }
         
-        // Add animation for dice roll
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes roll {
-                0% { transform: rotate(0deg) scale(1); }
-                25% { transform: rotate(90deg) scale(1.2); }
-                50% { transform: rotate(180deg) scale(1); }
-                75% { transform: rotate(270deg) scale(1.2); }
-                100% { transform: rotate(360deg) scale(1); }
-            }
-        `;
-        document.head.appendChild(style);
+        // ==================== TELEGRAM WEBAPP ИНТЕГРАЦИЯ ====================
         
-        // Telegram WebApp integration
         if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
             const tg = window.Telegram.WebApp;
             
-            // Expand WebApp to full height
+            // Развернуть WebApp на всю высоту
             tg.expand();
             
-            // Set theme colors
+            // Установить цвета темы
             tg.setHeaderColor('#1a1a2e');
             tg.setBackgroundColor('#1a1a2e');
             
-            // Add Telegram styles
+            // Добавить стили Telegram
             document.body.classList.add('twa-body');
             
-            // Handle back button
+            // Обработка кнопки "Назад"
             tg.BackButton.onClick(() => {
                 if (walletModal.classList.contains('active')) {
                     walletModal.classList.remove('active');
@@ -1596,8 +1898,11 @@
                 }
             });
             
-            // Show back button when needed
+            // Показать кнопку "Назад"
             tg.BackButton.show();
+            
+            // Готовность приложения
+            tg.ready();
         }
     </script>
 </body>
