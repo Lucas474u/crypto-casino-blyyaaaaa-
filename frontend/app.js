@@ -1,7 +1,7 @@
 // Конфигурация
 const CONFIG = {
-    API_URL: 'https://your-backend-api.com', // Замените на ваш API
-    MANIFEST_URL: 'https://your-domain.com/tonconnect-manifest.json',
+    API_URL: 'https://crypto-casino-blyyaaaaa.vercel.app', // Замените на ваш API
+    MANIFEST_URL: 'https://crypto-casino-blyyaaaaa.vercel.app/tonconnect-manifest.json',
     CONTRACT_ADDRESS: 'EQ...', // Адрес смарт-контракта
     REFERRAL_COMMISSION: 0.05, // 5% комиссия за рефералов
     HOUSE_EDGE: 0.02, // 2% комиссия казино
