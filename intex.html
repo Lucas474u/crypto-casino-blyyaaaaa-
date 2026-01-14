@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Casino | Ultimate Gaming Experience</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="rocket-loader">
+            <i class="fas fa-rocket"></i>
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+
+    <!-- Wallet Connect Modal -->
+    <div id="walletModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-wallet"></i> Connect Your Wallet</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p class="modal-subtitle">Open Wallet on Telegram or select your wallet to connect</p>
+                
+                <div class="wallet-options">
+                    <button class="wallet-btn telegram" onclick="connectWallet('telegram')">
+                        <i class="fab fa-telegram"></i>
+                        <span>Open Wallet on Telegram</span>
+                    </button>
+                    
+                    <div class="wallet-grid">
+                        <button class="wallet-option" onclick="connectWallet('tonkeeper')">
+                            <div class="wallet-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <span>Tonkeeper</span>
+                        </button>
+                        
+                        <button class="wallet-option" onclick="connectWallet('tonhub')">
+                            <div class="wallet-icon">
+                                <i class="fas fa-hubspot"></i>
+                            </div>
+                            <span>Tonhub</span>
+                        </button>
+                        
+                        <button class="wallet-option" onclick="connectWallet('mytonwallet')">
+                            <div class="wallet-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <span>My Ton Wallet</span>
+                        </button>
+                        
+                        <button class="wallet-option" onclick="connectWallet('safepal')">
+                            <div class="wallet-icon">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <span>SafePal</span>
+                        </button>
+                        
+                        <button class="wallet-option" onclick="connectWallet('ton')">
+                            <div class="wallet-icon">
+                                <i class="fas fa-gem"></i>
+                            </div>
+                            <span>TON Wallet</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="connection-status hidden" id="connectionStatus">
+                    <div class="status-indicator connecting">
+                        <div class="pulse"></div>
+                        <i class="fas fa-sync fa-spin"></i>
+                    </div>
+                    <p>Connecting to wallet...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <span>TON<span class="gradient-text">CASINO</span></span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#" class="nav-link active" data-game="crash">
+                    <i class="fas fa-rocket"></i>
+                    <span>Crash</span>
+                </a>
+                <a href="#" class="nav-link" data-game="dice">
+                    <i class="fas fa-dice"></i>
+                    <span>Dice</span>
+                </a>
+                <a href="#" class="nav-link" data-game="plinko">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Plinko</span>
+                </a>
+                <a href="#" class="nav-link" data-game="mines">
+                    <i class="fas fa-bomb"></i>
+                    <span>Mines</span>
+                </a>
+            </div>
+            
+            <div class="nav-right">
+                <div class="balance-display">
+                    <i class="fas fa-gem"></i>
+                    <span id="balanceAmount">0.00</span>
+                    <span class="currency">TON</span>
+                </div>
+                <button id="connectWalletBtn" class="connect-btn">
+                    <i class="fas fa-plug"></i>
+                    <span>Connect Wallet</span>
+                </button>
+                <div id="walletInfo" class="wallet-info hidden">
+                    <div class="wallet-address">
+                        <i class="fas fa-wallet"></i>
+                        <span id="walletAddress">0x...0000</span>
+                    </div>
+                    <button id="disconnectBtn" class="disconnect-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Game Area -->
+        <div class="game-area">
+            <!-- Crash Game -->
+            <div id="crashGame" class="game-container active">
+                <div class="game-header">
+                    <h1><i class="fas fa-rocket"></i> CRASH</h1>
+                    <p class="game-subtitle">Bet on the rocket's flight. Cash out before it crashes!</p>
+                </div>
+                
+                <div class="crash-container">
+                    <div class="rocket-display">
+                        <div class="rocket" id="rocket">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="multiplier-display" id="multiplierDisplay">
+                            <span class="multiplier">1.00x</span>
+                        </div>
+                    </div>
+                    
+                    <div class="crash-controls">
+                        <div class="bet-input">
+                            <input type="number" id="crashBet" placeholder="0.00" min="0.1" step="0.1">
+                            <span class="input-label">TON</span>
+                        </div>
+                        <div class="auto-cashout">
+                            <input type="number" id="autoCashout" placeholder="2.00" min="1.1" step="0.1">
+                            <span class="input-label">Auto Cashout</span>
+                        </div>
+                        <button id="placeBet" class="bet-btn">
+                            <i class="fas fa-play"></i>
+                            <span>Place Bet</span>
+                        </button>
+                        <button id="cashOut" class="cashout-btn disabled">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Cash Out</span>
+                        </button>
+                    </div>
+                    
+                    <div class="crash-history">
+                        <h3>Recent Games</h3>
+                        <div class="history-list" id="crashHistory">
+                            <!-- History items will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dice Game -->
+            <div id="diceGame" class="game-container">
+                <div class="game-header">
+                    <h1><i class="fas fa-dice"></i> DICE</h1>
+                    <p class="game-subtitle">Predict the dice roll. Win up to 6x your bet!</p>
+                </div>
+                
+                <div class="dice-container">
+                    <div class="dice-display">
+                        <div class="dice" id="dice">
+                            <div class="dice-face">?</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dice-controls">
+                        <div class="number-selector">
+                            <div class="numbers-grid">
+                                <button class="number-btn" data-number="1">1</button>
+                                <button class="number-btn" data-number="2">2</button>
+                                <button class="number-btn" data-number="3">3</button>
+                                <button class="number-btn" data-number="4">4</button>
+                                <button class="number-btn" data-number="5">5</button>
+                                <button class="number-btn" data-number="6">6</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bet-controls">
+                            <div class="bet-input">
+                                <input type="number" id="diceBet" placeholder="0.00" min="0.1" step="0.1">
+                                <span class="input-label">TON</span>
+                            </div>
+                            <button id="rollDice" class="roll-btn">
+                                <i class="fas fa-dice"></i>
+                                <span>Roll Dice</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plinko Game -->
+            <div id="plinkoGame" class="game-container">
+                <div class="game-header">
+                    <h1><i class="fas fa-bullseye"></i> PLINKO</h1>
+                    <p class="game-subtitle">Drop the ball and watch it bounce to victory!</p>
+                </div>
+                
+                <div class="plinko-container">
+                    <div class="plinko-board" id="plinkoBoard">
+                        <!-- Plinko board will be generated with JS -->
+                    </div>
+                    
+                    <div class="plinko-controls">
+                        <div class="risk-selector">
+                            <h3>Risk Level</h3>
+                            <div class="risk-buttons">
+                                <button class="risk-btn active" data-risk="low">Low</button>
+                                <button class="risk-btn" data-risk="medium">Medium</button>
+                                <button class="risk-btn" data-risk="high">High</button>
+                            </div>
+                        </div>
+                        
+                        <div class="bet-controls">
+                            <div class="bet-input">
+                                <input type="number" id="plinkoBet" placeholder="0.00" min="0.1" step="0.1">
+                                <span class="input-label">TON</span>
+                            </div>
+                            <button id="dropBall" class="drop-btn">
+                                <i class="fas fa-basketball-ball"></i>
+                                <span>Drop Ball</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mines Game -->
+            <div id="minesGame" class="game-container">
+                <div class="game-header">
+                    <h1><i class="fas fa-bomb"></i> MINES</h1>
+                    <p class="game-subtitle">Find gems, avoid mines. How lucky are you?</p>
+                </div>
+                
+                <div class="mines-container">
+                    <div class="mines-board" id="minesBoard">
+                        <!-- Mines grid will be generated with JS -->
+                    </div>
+                    
+                    <div class="mines-controls">
+                        <div class="mines-selector">
+                            <h3>Mines: <span id="minesCount">3</span></h3>
+                            <input type="range" id="minesSlider" min="1" max="24" value="3">
+                        </div>
+                        
+                        <div class="bet-controls">
+                            <div class="bet-input">
+                                <input type="number" id="minesBet" placeholder="0.00" min="0.1" step="0.1">
+                                <span class="input-label">TON</span>
+                            </div>
+                            <button id="startMines" class="mines-btn">
+                                <i class="fas fa-play"></i>
+                                <span>Start Game</span>
+                            </button>
+                            <button id="cashoutMines" class="cashout-btn disabled">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Cash Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Stats and Chat -->
+        <div class="sidebar">
+            <div class="stats-card">
+                <h3><i class="fas fa-chart-line"></i> Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Wagered</span>
+                        <span class="stat-value">1,245,000 TON</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Biggest Win</span>
+                        <span class="stat-value">45,230 TON</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Active Players</span>
+                        <span class="stat-value">2,847</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Games Played</span>
+                        <span class="stat-value">1.2M</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="live-bets">
+                <h3><i class="fas fa-bolt"></i> Live Bets</h3>
+                <div class="bets-list" id="liveBets">
+                    <!-- Live bets will be added here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>TON Casino</h4>
+                <p>Provably fair gaming on the TON blockchain. Play, win, and withdraw instantly.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Games</h4>
+                <a href="#">Crash</a>
+                <a href="#">Dice</a>
+                <a href="#">Plinko</a>
+                <a href="#">Mines</a>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Responsible Gaming</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 TON Casino. All rights reserved. For entertainment purposes only.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/ton-connect.js"></script>
+    <script src="js/crash.js"></script>
+    <script src="js/dice.js"></script>
+    <script src="js/plinko.js"></script>
+    <script src="js/mines.js"></script>
+    
+    <!-- Main Script -->
+    <script>
+        // Preloader
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelector('.preloader').style.display = 'none';
+            }, 1000);
+        });
+
+        // Game Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const game = link.getAttribute('data-game');
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Show selected game
+                document.querySelectorAll('.game-container').forEach(container => {
+                    container.classList.remove('active');
+                });
+                document.getElementById(`${game}Game`).classList.add('active');
+            });
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('walletModal');
+        const connectBtn = document.getElementById('connectWalletBtn');
+        const closeBtn = document.querySelector('.close-modal');
+
+        connectBtn.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateBalance();
+            generateCrashHistory();
+            generateLiveBets();
+        });
+
+        function updateBalance() {
+            // In production, fetch from API
+            document.getElementById('balanceAmount').textContent = '0.00';
+        }
+
+        function generateCrashHistory() {
+            const history = document.getElementById('crashHistory');
+            const multipliers = [2.45, 1.12, 5.67, 3.21, 8.93, 1.56, 4.32, 1.01];
+            
+            multipliers.forEach(mult => {
+                const item = document.createElement('div');
+                item.className = `history-item ${mult < 1.5 ? 'crashed' : 'safe'}`;
+                item.innerHTML = `<span class="multiplier">${mult}x</span>`;
+                history.appendChild(item);
+            });
+        }
+
+        function generateLiveBets() {
+            const betsList = document.getElementById('liveBets');
+            const bets = [
+                {user: 'Player1', game: 'Crash', amount: '5.00 TON', multiplier: '2.45x'},
+                {user: 'CryptoKing', game: 'Dice', amount: '2.50 TON', win: '15.00 TON'},
+                {user: 'Lucky777', game: 'Plinko', amount: '10.00 TON', multiplier: '5x'},
+                {user: 'MineHunter', game: 'Mines', amount: '3.00 TON', tiles: '8'},
+            ];
+            
+            bets.forEach(bet => {
+                const betItem = document.createElement('div');
+                betItem.className = 'bet-item';
+                betItem.innerHTML = `
+                    <div class="bet-user">${bet.user}</div>
+                    <div class="bet-details">
+                        <span class="bet-game">${bet.game}</span>
+                        <span class="bet-amount">${bet.amount}</span>
+                    </div>
+                `;
+                betsList.appendChild(betItem);
+            });
+        }
+    </script>
+</body>
+</html>
