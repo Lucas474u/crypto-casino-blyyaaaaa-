@@ -4,385 +4,325 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🚀 TON ROCKET | Premium Crypto Casino</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0F172A;
+            color: #F8FAFC;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: #6366F1;
+            font-size: 24px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .connect-btn {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .connect-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(30, 41, 59, 0.7);
+            padding: 10px 20px;
+            border-radius: 12px;
+        }
+        
+        .balance {
+            color: #10B981;
+            font-weight: 700;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #1E293B;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #94A3B8;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .wallets-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .wallet-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .wallet-btn:hover {
+            border-color: #6366F1;
+            transform: translateY(-2px);
+        }
+        
+        .wallet-icon {
+            font-size: 24px;
+        }
+        
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        #qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .game-card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .game-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #6366F1;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10B981;
+        }
+        
+        .stat-label {
+            color: #94A3B8;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Анимированный фон -->
-        <div class="bg-animation">
-            <div class="stars"></div>
-            <div class="stars"></div>
-            <div class="stars"></div>
-            <div class="rocket-trail"></div>
-            <div class="gradient-overlay"></div>
-        </div>
-
-        <!-- Загрузчик -->
-        <div id="loader" class="loader">
-            <div class="loader-content">
-                <div class="rocket-loader">
-                    <i class="fas fa-rocket"></i>
-                    <div class="fire"></div>
-                </div>
-                <div class="loader-text">TON ROCKET</div>
-                <div class="loader-subtext">ENTERING ORBIT...</div>
-                <div class="loader-progress">
-                    <div class="progress-bar"></div>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-rocket"></i>
+                <span class="logo-text">TON ROCKET</span>
+            </div>
+            
+            <div id="user-section">
+                <button id="connect-btn" class="connect-btn">
+                    <i class="fas fa-plug"></i>
+                    Connect Wallet
+                </button>
+                
+                <div id="user-info" class="user-info" style="display: none;">
+                    <div class="address">Connected: <span id="user-address">0x...</span></div>
+                    <div class="balance" id="user-balance">0.00 TON</div>
+                    <button id="disconnect-btn" class="connect-btn" style="background: #EF4444;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </div>
         </div>
-
-        <!-- Основное приложение -->
-        <div id="app" class="hidden">
-            <!-- Connect Modal -->
-            <div id="connect-modal" class="connect-modal">
-                <div class="modal-overlay"></div>
-                <div class="modal-wrapper">
-                    <div class="modal-card">
-                        <div class="modal-header">
-                            <div class="modal-logo">
-                                <div class="modal-logo-icon">
-                                    <i class="fas fa-rocket"></i>
-                                </div>
-                                <span>TON ROCKET</span>
-                            </div>
-                            <button class="close-modal">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="modal-body">
-                            <div class="connect-header">
-                                <h2>Connect Your Wallet</h2>
-                                <p>Scan QR code or select wallet to continue</p>
-                            </div>
-                            
-                            <div class="qr-section">
-                                <div class="qr-wrapper">
-                                    <div class="qr-container" id="qr-container">
-                                        <!-- QR Code будет здесь -->
-                                    </div>
-                                    <div class="qr-glow"></div>
-                                </div>
-                                <p class="qr-hint"><i class="fas fa-mobile-alt"></i> Scan with mobile wallet</p>
-                            </div>
-                            
-                            <div class="divider">
-                                <span>or connect with</span>
-                            </div>
-                            
-                            <div class="wallets-section">
-                                <h3><i class="fas fa-wallet"></i> Available Wallets</h3>
-                                <div class="wallets-grid" id="wallets-grid">
-                                    <!-- Wallets will load here -->
-                                </div>
-                                
-                                <div class="wallets-footer">
-                                    <p>Don't have a TON wallet?</p>
-                                    <a href="https://ton.org/wallets" target="_blank" class="wallet-guide-link">
-                                        <i class="fas fa-external-link-alt"></i>
-                                        Get a wallet
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="modal-footer">
-                            <div class="security-badge">
-                                <i class="fas fa-shield-check"></i>
-                                <span>Secured by TON Connect</span>
-                            </div>
-                            <p class="security-note">Your keys, your coins. We never access your funds.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Header -->
-            <header class="header">
-                <div class="header-container">
-                    <div class="header-left">
-                        <button class="menu-btn" id="menu-btn">
-                            <i class="fas fa-bars"></i>
-                        </button>
-                        <div class="logo">
-                            <div class="logo-icon">
-                                <i class="fas fa-rocket"></i>
-                                <div class="logo-pulse"></div>
-                            </div>
-                            <div class="logo-text">
-                                <span class="logo-main">TON</span>
-                                <span class="logo-accent">ROCKET</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="header-center">
-                        <div class="live-stats">
-                            <div class="stat-badge online">
-                                <div class="pulse-dot"></div>
-                                <span><i class="fas fa-users"></i> 2,458 Online</span>
-                            </div>
-                            <div class="stat-badge volume">
-                                <i class="fas fa-chart-line"></i>
-                                <span>24h Vol: $124.5K</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="header-right">
-                        <div class="header-actions">
-                            <button class="action-btn deposit">
-                                <i class="fas fa-plus-circle"></i>
-                                <span>Deposit</span>
-                            </button>
-                            
-                            <button class="action-btn bonuses">
-                                <i class="fas fa-gift"></i>
-                                <span>Bonuses</span>
-                                <span class="badge">3</span>
-                            </button>
-                            
-                            <button class="wallet-connect-btn" id="connect-wallet-btn">
-                                <div class="btn-glow"></div>
-                                <i class="fas fa-plug"></i>
-                                <span>Connect</span>
-                            </button>
-                            
-                            <div class="user-profile hidden" id="user-profile">
-                                <div class="profile-avatar">
-                                    <i class="fas fa-user-astronaut"></i>
-                                </div>
-                                <div class="profile-info">
-                                    <div class="profile-name" id="user-name">@cosmic_player</div>
-                                    <div class="profile-balance" id="user-balance">
-                                        <i class="fas fa-coins"></i>
-                                        <span>0.00 TON</span>
-                                    </div>
-                                </div>
-                                <button class="profile-menu">
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+        
+        <!-- Connect Modal -->
+        <div id="connect-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-btn" id="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <h2>Connect Wallet</h2>
+                <p style="color: #94A3B8; margin: 10px 0;">Choose your wallet to connect</p>
+                
+                <div class="qr-container" id="qr-section">
+                    <div id="qr-code"></div>
+                    <p style="color: #94A3B8; margin-top: 10px;">
+                        <i class="fas fa-mobile-alt"></i> Scan QR code with mobile wallet
+                    </p>
                 </div>
                 
-                <!-- Header Navigation -->
-                <nav class="header-nav">
-                    <div class="nav-container">
-                        <a href="#" class="nav-item active" data-page="dashboard">
-                            <i class="fas fa-home"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="#" class="nav-item" data-page="crash">
-                            <i class="fas fa-rocket"></i>
-                            <span>Crash</span>
-                            <span class="nav-badge hot">HOT</span>
-                        </a>
-                        <a href="#" class="nav-item" data-page="mines">
-                            <i class="fas fa-bomb"></i>
-                            <span>Mines</span>
-                        </a>
-                        <a href="#" class="nav-item" data-page="plinko">
-                            <i class="fas fa-basketball-ball"></i>
-                            <span>Plinko</span>
-                        </a>
-                        <a href="#" class="nav-item" data-page="dice">
-                            <i class="fas fa-dice"></i>
-                            <span>Dice</span>
-                        </a>
-                        <a href="#" class="nav-item" data-page="roulette">
-                            <i class="fas fa-roulette-wheel"></i>
-                            <span>Roulette</span>
-                        </a>
-                        <div class="nav-highlight"></div>
-                    </div>
-                </nav>
-            </header>
-
-            <!-- Sidebar -->
-            <nav class="sidebar" id="sidebar">
-                <div class="sidebar-overlay"></div>
-                <div class="sidebar-content">
-                    <div class="sidebar-header">
-                        <div class="sidebar-user" id="sidebar-user">
-                            <div class="user-avatar">
-                                <div class="avatar-glow"></div>
-                                <i class="fas fa-user-astronaut"></i>
-                            </div>
-                            <div class="user-info">
-                                <div class="user-name" id="sidebar-user-name">Guest Player</div>
-                                <div class="user-level">
-                                    <span class="level-tag">
-                                        <i class="fas fa-medal"></i>
-                                        Level 1
-                                    </span>
-                                    <div class="xp-progress">
-                                        <div class="xp-fill" style="width: 30%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="close-sidebar">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="sidebar-menu">
-                        <div class="menu-section">
-                            <h4><i class="fas fa-gamepad"></i> Games</h4>
-                            <a href="#" class="menu-item active" data-page="dashboard">
-                                <i class="fas fa-home"></i>
-                                <span>Dashboard</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="crash">
-                                <i class="fas fa-rocket"></i>
-                                <span>Crash</span>
-                                <span class="menu-badge">🔥</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="mines">
-                                <i class="fas fa-bomb"></i>
-                                <span>Mines</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="plinko">
-                                <i class="fas fa-basketball-ball"></i>
-                                <span>Plinko</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="dice">
-                                <i class="fas fa-dice"></i>
-                                <span>Dice</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="roulette">
-                                <i class="fas fa-roulette-wheel"></i>
-                                <span>Roulette</span>
-                            </a>
-                        </div>
-                        
-                        <div class="menu-section">
-                            <h4><i class="fas fa-user-friends"></i> Social</h4>
-                            <a href="#" class="menu-item" data-page="referral">
-                                <i class="fas fa-users"></i>
-                                <span>Referral Program</span>
-                                <span class="menu-badge earnings">5%</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="leaderboard">
-                                <i class="fas fa-trophy"></i>
-                                <span>Leaderboard</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="tournaments">
-                                <i class="fas fa-flag-checkered"></i>
-                                <span>Tournaments</span>
-                                <span class="menu-badge new">NEW</span>
-                            </a>
-                        </div>
-                        
-                        <div class="menu-section">
-                            <h4><i class="fas fa-cog"></i> Account</h4>
-                            <a href="#" class="menu-item" data-page="bonuses">
-                                <i class="fas fa-gift"></i>
-                                <span>Bonuses</span>
-                                <span class="menu-badge">3</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="transactions">
-                                <i class="fas fa-history"></i>
-                                <span>Transactions</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="vip">
-                                <i class="fas fa-crown"></i>
-                                <span>VIP Club</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="settings">
-                                <i class="fas fa-sliders-h"></i>
-                                <span>Settings</span>
-                            </a>
-                        </div>
-                        
-                        <div class="menu-section">
-                            <h4><i class="fas fa-headset"></i> Support</h4>
-                            <a href="#" class="menu-item" data-page="support">
-                                <i class="fas fa-question-circle"></i>
-                                <span>Help Center</span>
-                            </a>
-                            <a href="#" class="menu-item" data-page="rules">
-                                <i class="fas fa-book"></i>
-                                <span>Rules</span>
-                            </a>
-                            <a href="#" class="menu-item" href="https://t.me/tonrocket_support" target="_blank">
-                                <i class="fab fa-telegram"></i>
-                                <span>Telegram</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <div class="sidebar-footer">
-                        <div class="stats-card">
-                            <div class="stat">
-                                <span class="stat-label">Total Wagered</span>
-                                <span class="stat-value" id="total-wagered">0 TON</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Total Profit</span>
-                                <span class="stat-value profit" id="total-profit">0 TON</span>
-                            </div>
-                        </div>
-                        
-                        <button class="disconnect-btn hidden" id="disconnect-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Disconnect Wallet
-                        </button>
-                        
-                        <div class="theme-toggle">
-                            <button class="theme-btn" id="theme-toggle">
-                                <i class="fas fa-moon"></i>
-                                <span>Dark Mode</span>
-                            </button>
-                        </div>
-                    </div>
+                <div class="wallets-grid" id="wallets-grid">
+                    <!-- Wallets will be loaded here -->
                 </div>
-            </nav>
-
-            <!-- Main Content -->
-            <main class="main-content">
-                <div class="content-wrapper">
-                    <div class="page active" id="page-dashboard">
-                        <!-- Dashboard будет загружен динамически -->
+            </div>
+        </div>
+        
+        <!-- Games Section -->
+        <div style="margin-top: 40px;">
+            <h2>🎮 Games</h2>
+            <div class="games-grid">
+                <div class="game-card" onclick="alert('Coming soon!')">
+                    <div class="game-icon">
+                        <i class="fas fa-rocket"></i>
                     </div>
-                    
-                    <div class="page" id="page-crash"></div>
-                    <div class="page" id="page-mines"></div>
-                    <div class="page" id="page-plinko"></div>
-                    <div class="page" id="page-dice"></div>
-                    <div class="page" id="page-roulette"></div>
-                    <div class="page" id="page-referral"></div>
-                    <div class="page" id="page-bonuses"></div>
-                    <div class="page" id="page-leaderboard"></div>
-                    <div class="page" id="page-transactions"></div>
-                    <div class="page" id="page-support"></div>
+                    <h3>Crash</h3>
+                    <p style="color: #94A3B8;">Bet on rocket multiplier</p>
                 </div>
-            </main>
-
-            <!-- Floating Action Button -->
-            <button class="fab" id="quick-deposit">
-                <i class="fas fa-bolt"></i>
-            </button>
-
-            <!-- Toast Notifications Container -->
-            <div id="toast-container"></div>
+                
+                <div class="game-card" onclick="alert('Coming soon!')">
+                    <div class="game-icon">
+                        <i class="fas fa-bomb"></i>
+                    </div>
+                    <h3>Mines</h3>
+                    <p style="color: #94A3B8;">Find diamonds, avoid mines</p>
+                </div>
+                
+                <div class="game-card" onclick="alert('Coming soon!')">
+                    <div class="game-icon">
+                        <i class="fas fa-dice"></i>
+                    </div>
+                    <h3>Dice</h3>
+                    <p style="color: #94A3B8;">Roll for big wins</p>
+                </div>
+                
+                <div class="game-card" onclick="alert('Coming soon!')">
+                    <div class="game-icon">
+                        <i class="fas fa-basketball-ball"></i>
+                    </div>
+                    <h3>Plinko</h3>
+                    <p style="color: #94A3B8;">Classic drop game</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value">2,458</div>
+                <div class="stat-label">Online Players</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">$124.5K</div>
+                <div class="stat-label">24h Volume</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">98.7%</div>
+                <div class="stat-label">Uptime</div>
+            </div>
         </div>
     </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <!-- Load libraries -->
+    <script src="https://unpkg.com/tonconnect-sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
