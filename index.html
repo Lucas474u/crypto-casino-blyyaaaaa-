@@ -3,360 +3,386 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 TON Rocket | Premium Casino</title>
+    <title>🚀 TON ROCKET | Premium Crypto Casino</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@2.2.1/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
+        <!-- Анимированный фон -->
+        <div class="bg-animation">
+            <div class="stars"></div>
+            <div class="stars"></div>
+            <div class="stars"></div>
+            <div class="rocket-trail"></div>
+            <div class="gradient-overlay"></div>
+        </div>
+
         <!-- Загрузчик -->
         <div id="loader" class="loader">
             <div class="loader-content">
                 <div class="rocket-loader">
                     <i class="fas fa-rocket"></i>
+                    <div class="fire"></div>
                 </div>
                 <div class="loader-text">TON ROCKET</div>
-                <div class="loader-subtext">Premium Casino Platform</div>
+                <div class="loader-subtext">ENTERING ORBIT...</div>
+                <div class="loader-progress">
+                    <div class="progress-bar"></div>
+                </div>
             </div>
         </div>
 
         <!-- Основное приложение -->
         <div id="app" class="hidden">
-            <!-- Connect Wallet Модалка -->
+            <!-- Connect Modal -->
             <div id="connect-modal" class="connect-modal">
                 <div class="modal-overlay"></div>
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h2>Connect your wallet</h2>
-                        <p>Scan with your mobile wallet</p>
-                        <button class="close-modal">&times;</button>
-                    </div>
-                    
-                    <div class="modal-body">
-                        <!-- QR Code Section -->
-                        <div class="qr-section">
-                            <div class="qr-container" id="qr-container">
-                                <div class="qr-placeholder">
-                                    <i class="fas fa-qrcode"></i>
-                                    <p>Loading QR code...</p>
+                <div class="modal-wrapper">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <div class="modal-logo">
+                                <div class="modal-logo-icon">
+                                    <i class="fas fa-rocket"></i>
                                 </div>
+                                <span>TON ROCKET</span>
                             </div>
-                            <p class="qr-hint">Scan QR code with your mobile wallet</p>
+                            <button class="close-modal">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-
-                        <!-- Available Wallets Section -->
-                        <div class="wallets-section">
-                            <h3>Available wallets</h3>
-                            <div class="wallets-grid" id="wallets-grid">
-                                <!-- Wallets will be loaded dynamically -->
-                                <div class="loading-wallets">
-                                    <div class="spinner"></div>
-                                    <span>Loading wallets...</span>
-                                </div>
+                        
+                        <div class="modal-body">
+                            <div class="connect-header">
+                                <h2>Connect Your Wallet</h2>
+                                <p>Scan QR code or select wallet to continue</p>
                             </div>
                             
-                            <div class="view-all-wallets">
-                                <a href="#" id="view-all-btn">
-                                    <i class="fas fa-chevron-down"></i>
-                                    View all wallets
-                                </a>
+                            <div class="qr-section">
+                                <div class="qr-wrapper">
+                                    <div class="qr-container" id="qr-container">
+                                        <!-- QR Code будет здесь -->
+                                    </div>
+                                    <div class="qr-glow"></div>
+                                </div>
+                                <p class="qr-hint"><i class="fas fa-mobile-alt"></i> Scan with mobile wallet</p>
+                            </div>
+                            
+                            <div class="divider">
+                                <span>or connect with</span>
+                            </div>
+                            
+                            <div class="wallets-section">
+                                <h3><i class="fas fa-wallet"></i> Available Wallets</h3>
+                                <div class="wallets-grid" id="wallets-grid">
+                                    <!-- Wallets will load here -->
+                                </div>
+                                
+                                <div class="wallets-footer">
+                                    <p>Don't have a TON wallet?</p>
+                                    <a href="https://ton.org/wallets" target="_blank" class="wallet-guide-link">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Get a wallet
+                                    </a>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- TON Connect Footer -->
-                        <div class="ton-connect-footer">
-                            <div class="ton-connect-badge">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>TON Connect</span>
+                        
+                        <div class="modal-footer">
+                            <div class="security-badge">
+                                <i class="fas fa-shield-check"></i>
+                                <span>Secured by TON Connect</span>
                             </div>
-                            <p class="security-note">Secure connection powered by TON Foundation</p>
+                            <p class="security-note">Your keys, your coins. We never access your funds.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Верхняя панель -->
+            <!-- Header -->
             <header class="header">
-                <div class="header-left">
-                    <button class="menu-btn" id="menu-btn">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="logo">
-                        <div class="logo-icon">
+                <div class="header-container">
+                    <div class="header-left">
+                        <button class="menu-btn" id="menu-btn">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div class="logo">
+                            <div class="logo-icon">
+                                <i class="fas fa-rocket"></i>
+                                <div class="logo-pulse"></div>
+                            </div>
+                            <div class="logo-text">
+                                <span class="logo-main">TON</span>
+                                <span class="logo-accent">ROCKET</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-center">
+                        <div class="live-stats">
+                            <div class="stat-badge online">
+                                <div class="pulse-dot"></div>
+                                <span><i class="fas fa-users"></i> 2,458 Online</span>
+                            </div>
+                            <div class="stat-badge volume">
+                                <i class="fas fa-chart-line"></i>
+                                <span>24h Vol: $124.5K</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-right">
+                        <div class="header-actions">
+                            <button class="action-btn deposit">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Deposit</span>
+                            </button>
+                            
+                            <button class="action-btn bonuses">
+                                <i class="fas fa-gift"></i>
+                                <span>Bonuses</span>
+                                <span class="badge">3</span>
+                            </button>
+                            
+                            <button class="wallet-connect-btn" id="connect-wallet-btn">
+                                <div class="btn-glow"></div>
+                                <i class="fas fa-plug"></i>
+                                <span>Connect</span>
+                            </button>
+                            
+                            <div class="user-profile hidden" id="user-profile">
+                                <div class="profile-avatar">
+                                    <i class="fas fa-user-astronaut"></i>
+                                </div>
+                                <div class="profile-info">
+                                    <div class="profile-name" id="user-name">@cosmic_player</div>
+                                    <div class="profile-balance" id="user-balance">
+                                        <i class="fas fa-coins"></i>
+                                        <span>0.00 TON</span>
+                                    </div>
+                                </div>
+                                <button class="profile-menu">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Header Navigation -->
+                <nav class="header-nav">
+                    <div class="nav-container">
+                        <a href="#" class="nav-item active" data-page="dashboard">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="crash">
                             <i class="fas fa-rocket"></i>
-                        </div>
-                        <div class="logo-text">
-                            <span class="logo-main">TON ROCKET</span>
-                            <span class="logo-sub">CASINO</span>
-                        </div>
+                            <span>Crash</span>
+                            <span class="nav-badge hot">HOT</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="mines">
+                            <i class="fas fa-bomb"></i>
+                            <span>Mines</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="plinko">
+                            <i class="fas fa-basketball-ball"></i>
+                            <span>Plinko</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="dice">
+                            <i class="fas fa-dice"></i>
+                            <span>Dice</span>
+                        </a>
+                        <a href="#" class="nav-item" data-page="roulette">
+                            <i class="fas fa-roulette-wheel"></i>
+                            <span>Roulette</span>
+                        </a>
+                        <div class="nav-highlight"></div>
                     </div>
-                </div>
-                
-                <div class="header-center">
-                    <div class="header-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Online</span>
-                            <span class="stat-value" id="online-count">1,247</span>
-                        </div>
-                        <div class="stat-divider">•</div>
-                        <div class="stat-item">
-                            <span class="stat-label">Volume 24h</span>
-                            <span class="stat-value" id="daily-volume">12,458 TON</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="header-right">
-                    <div class="language-selector">
-                        <div class="language-current">
-                            <span class="flag">🇺🇸</span>
-                            <span class="lang-code">EN</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
-                        <div class="language-dropdown">
-                            <div class="lang-option" data-lang="en">
-                                <span class="flag">🇺🇸</span>
-                                <span>English</span>
-                            </div>
-                            <div class="lang-option" data-lang="ru">
-                                <span class="flag">🇷🇺</span>
-                                <span>Русский</span>
-                            </div>
-                            <div class="lang-option" data-lang="zh">
-                                <span class="flag">🇨🇳</span>
-                                <span>中文</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button class="wallet-btn" id="connect-wallet-btn">
-                        <div class="btn-content">
-                            <i class="fas fa-wallet"></i>
-                            <span>Connect Wallet</span>
-                        </div>
-                        <div class="btn-badge">NEW</div>
-                    </button>
-                    
-                    <div class="user-profile hidden" id="user-profile">
-                        <div class="user-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="user-info">
-                            <div class="user-name" id="user-name">@player</div>
-                            <div class="user-balance" id="user-balance">0 TON</div>
-                        </div>
-                    </div>
-                </div>
+                </nav>
             </header>
 
-            <!-- Боковое меню -->
+            <!-- Sidebar -->
             <nav class="sidebar" id="sidebar">
-                <div class="sidebar-header">
-                    <div class="user-info" id="sidebar-user-info">
-                        <div class="user-avatar-large">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name" id="sidebar-user-name">Guest</div>
-                            <div class="user-level">
-                                <span class="level-badge">Level 1</span>
-                                <div class="xp-bar">
-                                    <div class="xp-fill" style="width: 30%"></div>
+                <div class="sidebar-overlay"></div>
+                <div class="sidebar-content">
+                    <div class="sidebar-header">
+                        <div class="sidebar-user" id="sidebar-user">
+                            <div class="user-avatar">
+                                <div class="avatar-glow"></div>
+                                <i class="fas fa-user-astronaut"></i>
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name" id="sidebar-user-name">Guest Player</div>
+                                <div class="user-level">
+                                    <span class="level-tag">
+                                        <i class="fas fa-medal"></i>
+                                        Level 1
+                                    </span>
+                                    <div class="xp-progress">
+                                        <div class="xp-fill" style="width: 30%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <button class="close-sidebar">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <button class="close-sidebar">&times;</button>
-                </div>
-
-                <div class="sidebar-menu">
-                    <a href="#" class="menu-item active" data-page="dashboard">
-                        <div class="menu-icon">
-                            <i class="fas fa-home"></i>
-                        </div>
-                        <span class="menu-text">Dashboard</span>
-                    </a>
                     
-                    <a href="#" class="menu-item" data-page="crash">
-                        <div class="menu-icon">
-                            <i class="fas fa-rocket"></i>
+                    <div class="sidebar-menu">
+                        <div class="menu-section">
+                            <h4><i class="fas fa-gamepad"></i> Games</h4>
+                            <a href="#" class="menu-item active" data-page="dashboard">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="crash">
+                                <i class="fas fa-rocket"></i>
+                                <span>Crash</span>
+                                <span class="menu-badge">🔥</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="mines">
+                                <i class="fas fa-bomb"></i>
+                                <span>Mines</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="plinko">
+                                <i class="fas fa-basketball-ball"></i>
+                                <span>Plinko</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="dice">
+                                <i class="fas fa-dice"></i>
+                                <span>Dice</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="roulette">
+                                <i class="fas fa-roulette-wheel"></i>
+                                <span>Roulette</span>
+                            </a>
                         </div>
-                        <span class="menu-text">Crash</span>
-                        <span class="menu-badge hot">HOT</span>
-                    </a>
-                    
-                    <a href="#" class="menu-item" data-page="mines">
-                        <div class="menu-icon">
-                            <i class="fas fa-bomb"></i>
+                        
+                        <div class="menu-section">
+                            <h4><i class="fas fa-user-friends"></i> Social</h4>
+                            <a href="#" class="menu-item" data-page="referral">
+                                <i class="fas fa-users"></i>
+                                <span>Referral Program</span>
+                                <span class="menu-badge earnings">5%</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="leaderboard">
+                                <i class="fas fa-trophy"></i>
+                                <span>Leaderboard</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="tournaments">
+                                <i class="fas fa-flag-checkered"></i>
+                                <span>Tournaments</span>
+                                <span class="menu-badge new">NEW</span>
+                            </a>
                         </div>
-                        <span class="menu-text">Mines</span>
-                    </a>
-                    
-                    <a href="#" class="menu-item" data-page="plinko">
-                        <div class="menu-icon">
-                            <i class="fas fa-basketball-ball"></i>
+                        
+                        <div class="menu-section">
+                            <h4><i class="fas fa-cog"></i> Account</h4>
+                            <a href="#" class="menu-item" data-page="bonuses">
+                                <i class="fas fa-gift"></i>
+                                <span>Bonuses</span>
+                                <span class="menu-badge">3</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="transactions">
+                                <i class="fas fa-history"></i>
+                                <span>Transactions</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="vip">
+                                <i class="fas fa-crown"></i>
+                                <span>VIP Club</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="settings">
+                                <i class="fas fa-sliders-h"></i>
+                                <span>Settings</span>
+                            </a>
                         </div>
-                        <span class="menu-text">Plinko</span>
-                    </a>
-                    
-                    <a href="#" class="menu-item" data-page="dice">
-                        <div class="menu-icon">
-                            <i class="fas fa-dice"></i>
-                        </div>
-                        <span class="menu-text">Dice</span>
-                    </a>
-                    
-                    <div class="menu-divider"></div>
-                    
-                    <a href="#" class="menu-item" data-page="referral">
-                        <div class="menu-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <span class="menu-text">Referral Program</span>
-                    </a>
-                    
-                    <a href="#" class="menu-item" data-page="bonuses">
-                        <div class="menu-icon">
-                            <i class="fas fa-gift"></i>
-                        </div>
-                        <span class="menu-text">Bonuses</span>
-                        <span class="menu-badge new">NEW</span>
-                    </a>
-                    
-                    <a href="#" class="menu-item" data-page="leaderboard">
-                        <div class="menu-icon">
-                            <i class="fas fa-trophy"></i>
-                        </div>
-                        <span class="menu-text">Leaderboard</span>
-                    </a>
-                    
-                    <div class="menu-divider"></div>
-                    
-                    <a href="#" class="menu-item" data-page="transactions">
-                        <div class="menu-icon">
-                            <i class="fas fa-history"></i>
-                        </div>
-                        <span class="menu-text">Transactions</span>
-                    </a>
-                    
-                    <a href="#" class="menu-item" data-page="support">
-                        <div class="menu-icon">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                        <span class="menu-text">Support</span>
-                    </a>
-                </div>
-
-                <div class="sidebar-footer">
-                    <div class="stats-card">
-                        <div class="stat-row">
-                            <span class="stat-label">Total Wagered</span>
-                            <strong class="stat-value" id="total-wagered">0 TON</strong>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Total Profit</span>
-                            <strong class="stat-value profit" id="total-profit">0 TON</strong>
+                        
+                        <div class="menu-section">
+                            <h4><i class="fas fa-headset"></i> Support</h4>
+                            <a href="#" class="menu-item" data-page="support">
+                                <i class="fas fa-question-circle"></i>
+                                <span>Help Center</span>
+                            </a>
+                            <a href="#" class="menu-item" data-page="rules">
+                                <i class="fas fa-book"></i>
+                                <span>Rules</span>
+                            </a>
+                            <a href="#" class="menu-item" href="https://t.me/tonrocket_support" target="_blank">
+                                <i class="fab fa-telegram"></i>
+                                <span>Telegram</span>
+                            </a>
                         </div>
                     </div>
                     
-                    <button class="disconnect-btn hidden" id="disconnect-btn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Disconnect Wallet
-                    </button>
+                    <div class="sidebar-footer">
+                        <div class="stats-card">
+                            <div class="stat">
+                                <span class="stat-label">Total Wagered</span>
+                                <span class="stat-value" id="total-wagered">0 TON</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Total Profit</span>
+                                <span class="stat-value profit" id="total-profit">0 TON</span>
+                            </div>
+                        </div>
+                        
+                        <button class="disconnect-btn hidden" id="disconnect-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Disconnect Wallet
+                        </button>
+                        
+                        <div class="theme-toggle">
+                            <button class="theme-btn" id="theme-toggle">
+                                <i class="fas fa-moon"></i>
+                                <span>Dark Mode</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </nav>
 
-            <!-- Основной контент -->
+            <!-- Main Content -->
             <main class="main-content">
-                <div class="page active" id="page-dashboard">
-                    <!-- Dashboard будет загружен динамически -->
-                </div>
-
-                <div class="page" id="page-crash">
-                    <!-- Crash Game -->
-                </div>
-
-                <div class="page" id="page-mines">
-                    <!-- Mines Game -->
-                </div>
-
-                <div class="page" id="page-plinko">
-                    <!-- Plinko Game -->
-                </div>
-
-                <div class="page" id="page-dice">
-                    <!-- Dice Game -->
-                </div>
-
-                <div class="page" id="page-referral">
-                    <!-- Referral Program -->
-                </div>
-
-                <div class="page" id="page-bonuses">
-                    <!-- Bonuses -->
-                </div>
-
-                <div class="page" id="page-leaderboard">
-                    <!-- Leaderboard -->
-                </div>
-
-                <div class="page" id="page-transactions">
-                    <!-- Transactions -->
-                </div>
-
-                <div class="page" id="page-support">
-                    <!-- Support -->
+                <div class="content-wrapper">
+                    <div class="page active" id="page-dashboard">
+                        <!-- Dashboard будет загружен динамически -->
+                    </div>
+                    
+                    <div class="page" id="page-crash"></div>
+                    <div class="page" id="page-mines"></div>
+                    <div class="page" id="page-plinko"></div>
+                    <div class="page" id="page-dice"></div>
+                    <div class="page" id="page-roulette"></div>
+                    <div class="page" id="page-referral"></div>
+                    <div class="page" id="page-bonuses"></div>
+                    <div class="page" id="page-leaderboard"></div>
+                    <div class="page" id="page-transactions"></div>
+                    <div class="page" id="page-support"></div>
                 </div>
             </main>
 
-            <!-- Нижняя навигация -->
-            <footer class="bottom-nav">
-                <a href="#" class="nav-item active" data-page="dashboard">
-                    <div class="nav-icon">
-                        <i class="fas fa-home"></i>
-                    </div>
-                    <span class="nav-text">Home</span>
-                </a>
-                
-                <a href="#" class="nav-item" data-page="crash">
-                    <div class="nav-icon">
-                        <i class="fas fa-rocket"></i>
-                    </div>
-                    <span class="nav-text">Crash</span>
-                </a>
-                
-                <a href="#" class="nav-item" data-page="mines">
-                    <div class="nav-icon">
-                        <i class="fas fa-bomb"></i>
-                    </div>
-                    <span class="nav-text">Mines</span>
-                </a>
-                
-                <a href="#" class="nav-item" data-page="bonuses">
-                    <div class="nav-icon">
-                        <i class="fas fa-gift"></i>
-                    </div>
-                    <span class="nav-text">Bonuses</span>
-                </a>
-                
-                <a href="#" class="nav-item" data-page="referral">
-                    <div class="nav-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <span class="nav-text">Refer</span>
-                </a>
-            </footer>
+            <!-- Floating Action Button -->
+            <button class="fab" id="quick-deposit">
+                <i class="fas fa-bolt"></i>
+            </button>
+
+            <!-- Toast Notifications Container -->
+            <div id="toast-container"></div>
         </div>
     </div>
 
-    <!-- Скрипты -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
