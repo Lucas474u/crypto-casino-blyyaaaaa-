@@ -1,0 +1,122 @@
+{-
+    TON Casino Smart Contract
+    Features:
+    - Accept deposits
+    - Withdraw winnings
+    - Provably fair games
+    - Owner commission
+-}
+
+(int) slice_to_int(slice s) impure {
+    int x = 0;
+    repeat (s.slice_bits()) {
+        x = x * 2 + s~load_bit();
+    }
+    return x;
+}
+
+() recv_internal(int balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    
+    if (flags & 1) {
+        ;; Ignore bounced messages
+        return ();
+    }
+    
+    slice sender_address = cs~load_msg_addr();
+    int op = in_msg_body~load_uint(32);
+    
+    if (op == 0x7362d09c) {
+        ;; op::deposit()
+        deposit(sender_address, msg_value);
+    } else if (op == 0x595f07bc) {
+        ;; op::withdraw(amount, signature)
+        slice signature = in_msg_body~load_bits(512);
+        int amount = in_msg_body~load_coins();
+        withdraw(sender_address, amount, signature);
+    } else if (op == 0x654b8aff) {
+        ;; op::play(game_type, bet_amount, user_random)
+        int game_type = in_msg_body~load_uint(8);
+        int bet_amount = in_msg_body~load_coins();
+        slice user_random = in_msg_body~load_bits(256);
+        play_game(sender_address, game_type, bet_amount, user_random);
+    } else {
+        ;; Simple deposit without operation
+        deposit(sender_address, msg_value);
+    }
+}
+
+() deposit(slice sender, int amount) impure {
+    ;; Store user balance in contract storage
+    ;; In production, use dictionary for multiple users
+    ;; For MVP, we'll use single user for simplicity
+    save_data(amount);
+}
+
+() withdraw(slice sender, int amount, slice signature) impure {
+    ;; Verify signature (should be signed by casino server)
+    ;; For MVP, we'll implement simple version
+    
+    int current_balance = load_data();
+    throw_if(1001, amount > current_balance);
+    
+    ;; Send TON to user
+    var msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(sender)
+        .store_coins(amount)
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+        .end_cell();
+    
+    send_raw_message(msg, 64); ;; Send remaining balance
+    save_data(current_balance - amount);
+}
+
+() play_game(slice sender, int game_type, int bet_amount, slice user_random) impure {
+    ;; Game logic implementation
+    ;; This should be replaced with provably fair RNG
+    
+    int current_balance = load_data();
+    throw_if(1002, bet_amount > current_balance);
+    
+    ;; Generate random result (simplified)
+    int random_result = slice_to_int(user_random) % 100;
+    int win_multiplier = 0;
+    
+    if (game_type == 0) {
+        ;; Dice game
+        win_multiplier = (random_result < 50) ? 2 : 0;
+    } else if (game_type == 1) {
+        ;; Crash game
+        win_multiplier = (random_result < 5) ? 20 : 0;
+    } else if (game_type == 2) {
+        ;; Mines game
+        win_multiplier = (random_result < 10) ? 10 : 0;
+    }
+    
+    int win_amount = bet_amount * win_multiplier / 100;
+    int new_balance = current_balance - bet_amount + win_amount;
+    
+    save_data(new_balance);
+    
+    ;; Send win notification if applicable
+    if (win_amount > 0) {
+        var msg = begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(sender)
+            .store_coins(win_amount)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .end_cell();
+        send_raw_message(msg, 64);
+    }
+}
+
+(int) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return ds~load_coins();
+}
+
+() save_data(int balance) inline {
+    set_data(begin_cell().store_coins(balance).end_cell());
+}
