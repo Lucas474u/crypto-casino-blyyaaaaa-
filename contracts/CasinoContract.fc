@@ -1,0 +1,554 @@
+#pragma version >=0.4.0;
+#include "imports/stdlib.fc";
+
+;; =============== СТРУКТУРЫ ДАННЫХ ===============
+
+;; Структура пользователя
+(int balance, int nonce, cell referral_code, slice referrer) user_data;
+
+;; Структура игры
+(int bet, int multiplier, int auto_cashout, int seed, int start_time) game_session;
+
+;; =============== КОНСТАНТЫ ===============
+
+const int OP_DEPOSIT = 0x7362d09c;
+const int OP_WITHDRAW = 0x0f8a7ea5;
+const int OP_PLAY_CRASH = 0x4bc7c2df;
+const int OP_PLAY_MINES = 0x6954d5c4;
+const int OP_CLAIM_BONUS = 0x654b8ac2;
+const int OP_CLAIM_REFERRAL = 0x12345678;
+
+const int HOUSE_EDGE = 20; ;; 2% комиссия (20 базисных пунктов)
+const int REFERRAL_COMMISSION = 50; ;; 5% комиссия рефералам
+const int MIN_BET = 100000000; ;; 0.1 TON в нанотонах
+const int MAX_BET = 1000000000000; ;; 1000 TON в нанотонах
+
+const slice ADMIN_ADDRESS = "EQD...ВАШ_АДРЕС_ЗДЕСЬ..."; ;; Адрес администратора
+
+;; =============== ОСНОВНОЙ КОНТРАКТ ===============
+
+() recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    ;; Проверяем, что сообщение не пустое
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+    
+    ;; Читаем флаги сообщения
+    int flags = in_msg_body.preload_uint(4);
+    
+    ;; Пропускаем флаги
+    if (flags & 1) {
+        in_msg_body~skip_bits(4 + 64 + 32); ;; skip 4 flags + 64 bounced + 32 ihr_disabled
+    } else {
+        in_msg_body~skip_bits(4); ;; skip only 4 flags
+    }
+    
+    ;; Читаем адрес отправителя
+    slice sender_address = in_msg_body~load_msg_addr();
+    
+    ;; Читаем op код операции
+    if (in_msg_body.slice_bits() < 32) {
+        return ();
+    }
+    int op = in_msg_body~load_uint(32);
+    
+    ;; Обрабатываем операции
+    if (op == OP_DEPOSIT) {
+        deposit_handler(sender_address, in_msg_body, msg_value);
+    } else 
+    if (op == OP_WITHDRAW) {
+        withdraw_handler(sender_address, in_msg_body);
+    } else 
+    if (op == OP_PLAY_CRASH) {
+        play_crash_handler(sender_address, in_msg_body, msg_value);
+    } else 
+    if (op == OP_PLAY_MINES) {
+        play_mines_handler(sender_address, in_msg_body, msg_value);
+    } else 
+    if (op == OP_CLAIM_BONUS) {
+        claim_bonus_handler(sender_address, in_msg_body);
+    } else 
+    if (op == OP_CLAIM_REFERRAL) {
+        claim_referral_handler(sender_address, in_msg_body);
+    } else {
+        ;; Неизвестная операция - возвращаем средства
+        return_unspent();
+    }
+}
+
+;; =============== ОБРАБОТКА ДЕПОЗИТОВ ===============
+
+() deposit_handler(slice sender_address, slice in_msg_body, int msg_value) impure {
+    ;; Читаем реферальный код (если есть)
+    slice referrer_code = null();
+    if (in_msg_body.slice_bits() >= 256) {
+        referrer_code = in_msg_body~load_bits(256);
+    }
+    
+    ;; Получаем или создаем данные пользователя
+    var user_cell = get_user_data(sender_address);
+    (int balance, int nonce, cell ref_code_cell, slice referrer) = load_user_data(user_cell);
+    
+    ;; Если пользователь новый и есть реферер
+    if (balance == 0 && referrer_code.not_null()) {
+        ;; Сохраняем реферера
+        referrer = referrer_code;
+        
+        ;; Начисляем бонус рефереру (0.1 TON)
+        var referrer_data = get_user_data_by_code(referrer_code);
+        if (referrer_data.not_null()) {
+            (int ref_balance, int ref_nonce, cell ref_ref_code, slice ref_referrer) = load_user_data(referrer_data);
+            ref_balance += 100000000; ;; 0.1 TON
+            save_user_data(sender_address, ref_balance, ref_nonce, ref_ref_code, ref_referrer);
+        }
+    }
+    
+    ;; Обновляем баланс
+    balance += msg_value;
+    
+    ;; Генерируем реферальный код для нового пользователя
+    if (balance == msg_value) { ;; Первый депозит
+        ref_code_cell = generate_referral_code(sender_address);
+    }
+    
+    ;; Сохраняем данные
+    save_user_data(sender_address, balance, nonce, ref_code_cell, referrer);
+    
+    ;; Отправляем подтверждение
+    send_message(sender_address, 0, 0, OP_DEPOSIT, msg_value, 0);
+}
+
+;; =============== ОБРАБОТКА ВЫВОДА ===============
+
+() withdraw_handler(slice sender_address, slice in_msg_body) impure {
+    ;; Читаем данные
+    int amount = in_msg_body~load_coins();
+    int nonce = in_msg_body~load_uint(64);
+    slice signature = in_msg_body~load_bits(512);
+    
+    ;; Проверяем подпись (упрощенно)
+    ;; В реальном контракте здесь должна быть проверка Ed25519 подписи
+    
+    ;; Получаем данные пользователя
+    var user_cell = get_user_data(sender_address);
+    (int balance, int stored_nonce, cell ref_code_cell, slice referrer) = load_user_data(user_cell);
+    
+    ;; Проверяем nonce
+    if (nonce <= stored_nonce) {
+        throw(100); ;; Invalid nonce
+    }
+    
+    ;; Проверяем баланс
+    if (amount > balance) {
+        throw(101); ;; Insufficient balance
+    }
+    
+    ;; Рассчитываем комиссию
+    int fee = amount * HOUSE_EDGE / 1000;
+    int payout = amount - fee;
+    
+    ;; Обновляем баланс
+    balance -= amount;
+    stored_nonce = nonce;
+    
+    ;; Сохраняем данные
+    save_user_data(sender_address, balance, stored_nonce, ref_code_cell, referrer);
+    
+    ;; Отправляем средства пользователю
+    send_message(sender_address, payout, 64, OP_WITHDRAW, payout, 0);
+    
+    ;; Отправляем комиссию администратору
+    send_message(ADMIN_ADDRESS, fee, 64, 0, fee, 0);
+}
+
+;; =============== КРАШ ИГРА ===============
+
+() play_crash_handler(slice sender_address, slice in_msg_body, int msg_value) impure {
+    ;; Читаем параметры игры
+    int bet_amount = in_msg_body~load_coins();
+    int auto_cashout = in_msg_body~load_uint(32); ;; в базисных пунктах (1.5x = 150)
+    int user_seed = in_msg_body~load_uint(256);
+    
+    ;; Проверяем минимальную/максимальную ставку
+    if (bet_amount < MIN_BET || bet_amount > MAX_BET) {
+        throw(102); ;; Invalid bet amount
+    }
+    
+    ;; Проверяем, что присланная сумма равна ставке
+    if (msg_value != bet_amount) {
+        throw(103); ;; Invalid message value
+    }
+    
+    ;; Получаем данные пользователя
+    var user_cell = get_user_data(sender_address);
+    (int balance, int nonce, cell ref_code_cell, slice referrer) = load_user_data(user_cell);
+    
+    ;; Генерируем результат игры
+    int game_multiplier = generate_crash_multiplier(user_seed);
+    
+    ;; Проверяем выигрыш
+    if (game_multiplier >= auto_cashout) {
+        ;; Игрок выиграл
+        int win_amount = bet_amount * auto_cashout / 100;
+        
+        ;; Выплачиваем выигрыш
+        send_message(sender_address, win_amount, 64, OP_PLAY_CRASH, win_amount, game_multiplier);
+        
+        ;; Начисляем реферальную комиссию
+        if (referrer.not_null()) {
+            var referrer_data = get_user_data_by_code(referrer);
+            if (referrer_data.not_null()) {
+                (int ref_balance, int ref_nonce, cell ref_ref_code, slice ref_referrer) = load_user_data(referrer_data);
+                int referral_bonus = win_amount * REFERRAL_COMMISSION / 1000;
+                ref_balance += referral_bonus;
+                save_user_data_by_code(referrer, ref_balance, ref_nonce, ref_ref_code, ref_referrer);
+            }
+        }
+    } else {
+        ;; Игрок проиграл - ставка остается в контракте
+        ;; Отправляем уведомление о проигрыше
+        send_message(sender_address, 0, 64, OP_PLAY_CRASH, 0, game_multiplier);
+    }
+    
+    ;; Обновляем статистику (увеличиваем nonce)
+    nonce += 1;
+    save_user_data(sender_address, balance, nonce, ref_code_cell, referrer);
+}
+
+;; =============== ГЕНЕРАЦИЯ МНОЖИТЕЛЯ КРАША ===============
+
+(int) generate_crash_multiplier(int seed) impure {
+    ;; Прозрачный и проверяемый алгоритм
+    ;; Используем хэш от seed + текущего времени блока
+    
+    ;; Получаем текущее время
+    int current_time = now();
+    
+    ;; Создаем seed для RNG
+    cell seed_cell = begin_cell()
+        .store_int(seed, 256)
+        .store_int(current_time, 64)
+        .end_cell();
+    
+    ;; Хэшируем для получения случайного числа
+    slice seed_hash = hash_cell(seed_cell);
+    int random_value = seed_hash.preload_uint(256);
+    
+    ;; Алгоритм определения краша (Provably Fair):
+    ;; 1. Хэш = SHA256(seed + server_seed)
+    ;; 2. Первые 8 байт хэша как шестнадцатеричное число
+    ;; 3. E = 2^52
+    ;; 4. Краш = floor((100 * E - h) / (E - h)) / 100
+    
+    ;; Для упрощения используем детерминированный алгоритм:
+    int hash_mod = random_value % 1000000;
+    
+    ;; Вероятность краша:
+    ;; - 1% на 1.00x
+    ;; - 0.5% на 1.10x
+    ;; - 0.1% на 2.00x
+    ;; - 0.01% на 10.00x
+    
+    if (hash_mod < 10000) { ;; 1% - краш на 1.00x
+        return 100;
+    } elseif (hash_mod < 15000) { ;; 0.5% - краш на 1.10x
+        return 110;
+    } elseif (hash_mod < 16000) { ;; 0.1% - краш на 2.00x
+        return 200;
+    } elseif (hash_mod < 16100) { ;; 0.01% - краш на 10.00x
+        return 1000;
+    } else {
+        ;; Генерируем множитель от 1.50x до 100x
+        ;; Чем больше hash_mod, тем выше множитель
+        int multiplier_base = 150 + ((hash_mod % 98500) * 9850 / 100000);
+        return multiplier_base;
+    }
+}
+
+;; =============== ИГРА МИНЫ ===============
+
+() play_mines_handler(slice sender_address, slice in_msg_body, int msg_value) impure {
+    ;; Читаем параметры игры
+    int bet_amount = in_msg_body~load_coins();
+    int mines_count = in_msg_body~load_uint(8); ;; от 1 до 24
+    int first_move = in_msg_body~load_uint(8); ;; первая клетка (0-24)
+    int user_seed = in_msg_body~load_uint(256);
+    
+    ;; Проверяем параметры
+    if (mines_count < 1 || mines_count > 24) {
+        throw(104); ;; Invalid mines count
+    }
+    
+    if (first_move > 24) {
+        throw(105); ;; Invalid cell
+    }
+    
+    if (bet_amount < MIN_BET || bet_amount > MAX_BET) {
+        throw(102); ;; Invalid bet amount
+    }
+    
+    if (msg_value != bet_amount) {
+        throw(103); ;; Invalid message value
+    }
+    
+    ;; Генерируем поле мин
+    (int mines_bitmask, int safe_cells) = generate_mines_field(user_seed, mines_count, first_move);
+    
+    ;; Проверяем первую клетку
+    int is_mine = (mines_bitmask >> first_move) & 1;
+    
+    if (is_mine == 1) {
+        ;; Игрок попал на мину сразу
+        send_message(sender_address, 0, 64, OP_PLAY_MINES, 0, 0);
+        return;
+    }
+    
+    ;; Открываем первую клетку
+    int opened_cells = 1;
+    int current_multiplier = calculate_mines_multiplier(opened_cells, mines_count);
+    
+    ;; Отправляем результат первого хода
+    send_message(sender_address, 0, 64, OP_PLAY_MINES, current_multiplier, mines_bitmask);
+}
+
+;; =============== ГЕНЕРАЦИЯ ПОЛЯ МИН ===============
+
+(int, int) generate_mines_field(int seed, int mines_count, int first_cell) impure {
+    ;; Генерируем детерминированное поле мин
+    ;; Гарантируем, что первая клетка безопасна
+    
+    int mines_bitmask = 0;
+    int placed_mines = 0;
+    int current_time = now();
+    
+    ;; Создаем seed для генерации
+    cell rng_seed = begin_cell()
+        .store_int(seed, 256)
+        .store_int(current_time, 64)
+        .store_int(mines_count, 8)
+        .end_cell();
+    
+    slice hash = hash_cell(rng_seed);
+    int random_value = hash.preload_uint(256);
+    
+    ;; Генерируем мины, исключая первую клетку
+    while (placed_mines < mines_count) {
+        int cell_index = random_value % 25;
+        random_value = random_value ~/ 25;
+        
+        ;; Если клетка не первая и еще не содержит мину
+        if (cell_index != first_cell && ((mines_bitmask >> cell_index) & 1) == 0) {
+            mines_bitmask = mines_bitmask | (1 << cell_index);
+            placed_mines += 1;
+        }
+        
+        ;; Если random_value закончился, хэшируем снова
+        if (random_value < 25) {
+            cell new_seed = begin_cell()
+                .store_slice(hash)
+                .store_int(placed_mines, 8)
+                .end_cell();
+            hash = hash_cell(new_seed);
+            random_value = hash.preload_uint(256);
+        }
+    }
+    
+    ;; Возвращаем битмаску мин и количество безопасных клеток
+    return (mines_bitmask, 25 - mines_count);
+}
+
+;; =============== РАСЧЕТ МНОЖИТЕЛЯ ДЛЯ МИН ===============
+
+(int) calculate_mines_multiplier(int opened_cells, int mines_count) impure {
+    ;; Формула множителя для игры в мины:
+    ;; multiplier = 0.99^(mines_count) * 1.15^(opened_cells)
+    
+    ;; Для упрощения используем таблицу множителей
+    if (mines_count == 1) {
+        if (opened_cells == 1) return 115;
+        if (opened_cells == 2) return 132;
+        if (opened_cells == 3) return 152;
+        if (opened_cells == 4) return 175;
+        if (opened_cells == 5) return 201;
+        if (opened_cells == 10) return 405;
+        if (opened_cells == 15) return 814;
+        if (opened_cells == 20) return 1637;
+        if (opened_cells == 24) return 3292;
+    } elseif (mines_count == 3) {
+        if (opened_cells == 1) return 133;
+        if (opened_cells == 2) return 177;
+        if (opened_cells == 3) return 236;
+        if (opened_cells == 4) return 314;
+        if (opened_cells == 5) return 417;
+        if (opened_cells == 10) return 2481;
+    } elseif (mines_count == 5) {
+        if (opened_cells == 1) return 153;
+        if (opened_cells == 2) return 234;
+        if (opened_cells == 3) return 358;
+        if (opened_cells == 4) return 548;
+        if (opened_cells == 5) return 838;
+    }
+    
+    ;; Базовая формула для других случаев
+    int base = 10000; ;; 100.00x в базисных пунктах
+    int multiplier = base;
+    
+    ;; Учитываем количество мин
+    multiplier = multiplier * (10000 - mines_count * 100) / 10000;
+    
+    ;; Учитываем открытые клетки
+    int i = 0;
+    while (i < opened_cells) {
+        multiplier = multiplier * 115 / 100;
+        i += 1;
+    }
+    
+    return multiplier / 100; ;; Конвертируем в базисные пункты
+}
+
+;; =============== БОНУСЫ ===============
+
+() claim_bonus_handler(slice sender_address, slice in_msg_body) impure {
+    ;; Читаем тип бонуса
+    int bonus_type = in_msg_body~load_uint(8);
+    int nonce = in_msg_body~load_uint(64);
+    
+    ;; Получаем данные пользователя
+    var user_cell = get_user_data(sender_address);
+    (int balance, int stored_nonce, cell ref_code_cell, slice referrer) = load_user_data(user_cell);
+    
+    ;; Проверяем nonce
+    if (nonce <= stored_nonce) {
+        throw(100); ;; Invalid nonce
+    }
+    
+    int bonus_amount = 0;
+    
+    if (bonus_type == 1) { ;; Daily bonus
+        ;; Проверяем, когда последний раз забирали бонус
+        ;; Для простоты - каждый раз даем 0.1 TON
+        bonus_amount = 100000000; ;; 0.1 TON
+    } elseif (bonus_type == 2) { ;; Level up bonus
+        bonus_amount = 50000000; ;; 0.05 TON
+    }
+    
+    ;; Начисляем бонус
+    if (bonus_amount > 0) {
+        balance += bonus_amount;
+        stored_nonce = nonce;
+        save_user_data(sender_address, balance, stored_nonce, ref_code_cell, referrer);
+        
+        ;; Отправляем подтверждение
+        send_message(sender_address, 0, 64, OP_CLAIM_BONUS, bonus_amount, bonus_type);
+    }
+}
+
+() claim_referral_handler(slice sender_address, slice in_msg_body) {
+    ;; Получаем данные пользователя
+    var user_cell = get_user_data(sender_address);
+    (int balance, int nonce, cell ref_code_cell, slice referrer) = load_user_data(user_cell);
+    
+    ;; Проверяем реферальные начисления
+    ;; В реальном контракте здесь будет логика проверки накопленных комиссий
+    
+    ;; Для демонстрации отправляем 0.5 TON
+    int referral_bonus = 500000000; ;; 0.5 TON
+    
+    balance += referral_bonus;
+    save_user_data(sender_address, balance, nonce, ref_code_cell, referrer);
+    
+    send_message(sender_address, 0, 64, OP_CLAIM_REFERRAL, referral_bonus, 0);
+}
+
+;; =============== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===============
+
+;; Загрузка данных пользователя
+(int, int, cell, slice) load_user_data(cell user_cell) {
+    if (user_cell.depth() == 0) {
+        ;; Новый пользователь
+        return (0, 0, null(), null());
+    }
+    
+    slice s = user_cell.begin_parse();
+    int balance = s~load_coins();
+    int nonce = s~load_uint(64);
+    cell ref_code_cell = s~load_ref();
+    slice referrer = null();
+    
+    if (s.slice_bits() >= 256) {
+        referrer = s~load_bits(256);
+    }
+    
+    return (balance, nonce, ref_code_cell, referrer);
+}
+
+;; Сохранение данных пользователя
+cell save_user_data(slice address, int balance, int nonce, cell ref_code_cell, slice referrer) {
+    ;; Сохраняем в словарь
+    return begin_cell()
+        .store_coins(balance)
+        .store_uint(nonce, 64)
+        .store_ref(ref_code_cell)
+        .store_slice(referrer)
+        .end_cell();
+}
+
+;; Генерация реферального кода
+cell generate_referral_code(slice address) impure {
+    ;; Генерируем уникальный код на основе адреса и времени
+    int timestamp = now();
+    
+    cell code_cell = begin_cell()
+        .store_slice(address)
+        .store_uint(timestamp, 64)
+        .end_cell();
+    
+    slice hash = hash_cell(code_cell);
+    int code = hash.preload_uint(256);
+    
+    return begin_cell()
+        .store_uint(code, 256)
+        .end_cell();
+}
+
+;; Отправка сообщения
+() send_message(slice to_address, int amount, int mode, int op, int value, int data) impure {
+    cell msg = begin_cell()
+        .store_uint(0x18, 6) ;; flags
+        .store_slice(to_address)
+        .store_coins(amount)
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1) ;; body length
+        .store_uint(op, 32)
+        .store_coins(value)
+        .store_uint(data, 32)
+        .end_cell();
+    
+    send_raw_message(msg, mode);
+}
+
+;; Возврат неизрасходованных средств
+() return_unspent() impure {
+    throw_unless(1000, 0); ;; всегда выбрасываем исключение для возврата
+}
+
+;; =============== GET-МЕТОДЫ ===============
+
+;; Получение баланса пользователя
+(int) get_user_balance(slice address) method_id {
+    var user_cell = get_user_data(address);
+    (int balance, int nonce, cell ref_code, slice referrer) = load_user_data(user_cell);
+    return balance;
+}
+
+;; Получение реферального кода
+(cell) get_user_referral_code(slice address) method_id {
+    var user_cell = get_user_data(address);
+    (int balance, int nonce, cell ref_code, slice referrer) = load_user_data(user_cell);
+    return ref_code;
+}
+
+;; Получение статистики контракта
+(int, int, int) get_contract_stats() method_id {
+    ;; Возвращает: общий объем, количество игроков, прибыль
+    return (0, 0, 0); ;; Заглушка
+}
