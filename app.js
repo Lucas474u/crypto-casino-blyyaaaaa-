@@ -1,23 +1,18 @@
 // ===== CONFIGURATION =====
 const CONFIG = {
     // TON Connect Configuration
-    MANIFEST_URL: 'https://crypto-casino-blyyaaaaa.vercel.app/tonconnect-manifest.json',
+    MANIFEST_URL: window.location.origin + '/tonconnect-manifest.json',
     WALLETS_LIST_URL: 'https://raw.githubusercontent.com/ton-connect/wallets-list/main/wallets.json',
     
-    // API Endpoints
-    TON_API_URL: 'https://toncenter.com/api/v2',
-    TON_API_KEY: '045d99debf6b8527dee4f34cb22347fec997027bf8770923b247cbd8a974e49c',
-    
     // App Configuration
-    APP_NAME: 'TON Rocket Casino',
+    APP_NAME: 'TON ROCKET',
     APP_VERSION: '1.0.0',
-    
-    // Default State
-    DEFAULT_LANGUAGE: 'en',
+    NETWORK: 'mainnet',
     
     // Demo Data
-    DEMO_ONLINE_COUNT: 1247,
-    DEMO_DAILY_VOLUME: 12458
+    DEMO_ONLINE_COUNT: 2458,
+    DEMO_DAILY_VOLUME: 124500,
+    DEMO_BIGGEST_WIN: 12850
 };
 
 // ===== STATE MANAGEMENT =====
@@ -27,265 +22,92 @@ const AppState = {
     wallet: null,
     balance: 0,
     isConnected: false,
+    isConnecting: false,
     
     // App State
-    language: CONFIG.DEFAULT_LANGUAGE,
     currentPage: 'dashboard',
-    isLoading: false,
+    theme: 'dark',
+    language: 'en',
     
-    // Wallets List
+    // Wallets
     wallets: [],
-    installedWallets: [],
+    installedWallets: new Set(),
     
     // TON Connect
     connector: null,
-    tonConnectUI: null
+    unsubscribe: null,
+    qrCode: null
 };
 
-// ===== WALLET INTEGRATION =====
-class WalletIntegration {
-    constructor() {
-        this.walletList = [];
-        this.installedWallets = new Set();
-    }
-    
-    // Check for installed wallets
-    async detectInstalledWallets() {
-        const installed = new Set();
-        
-        // Check for Tonkeeper
-        if (window.tonkeeper) {
-            installed.add('tonwallet');
-        }
-        
-        // Check for MyTonWallet
-        if (window.ton) {
-            installed.add('mytonwallet');
-        }
-        
-        // Check for Bitget Wallet
-        if (window.bitkeep || window.bitget) {
-            installed.add('bitget');
-        }
-        
-        // Check for Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp) {
-            installed.add('telegram-wallet');
-        }
-        
-        // Check browser extensions
-        try {
-            // Tonkeeper Extension
-            if (typeof window.tonkeeper !== 'undefined') {
-                installed.add('tonkeeper-ext');
-            }
-        } catch (e) {}
-        
-        this.installedWallets = installed;
-        return Array.from(installed);
-    }
-    
-    // Get wallet details by name
-    getWalletDetails(name) {
-        const wallets = {
-            'tonwallet': {
-                name: 'Tonkeeper',
-                icon: 'fas fa-shield-alt',
-                color: '#007AFF',
-                universalUrl: 'https://app.tonkeeper.com/ton-connect',
-                isInstalled: this.installedWallets.has('tonwallet'),
-                isPopular: true
-            },
-            'telegram-wallet': {
-                name: 'Wallet in Telegram',
-                icon: 'fab fa-telegram',
-                color: '#0088CC',
-                universalUrl: 'https://t.me/wallet',
-                isInstalled: this.installedWallets.has('telegram-wallet'),
-                isPopular: false
-            },
-            'mytonwallet': {
-                name: 'MyTonWallet',
-                icon: 'fas fa-wallet',
-                color: '#5856D6',
-                universalUrl: 'https://connect.mytonwallet.org',
-                isInstalled: this.installedWallets.has('mytonwallet'),
-                isPopular: false
-            },
-            'tonhub': {
-                name: 'Tonhub',
-                icon: 'fas fa-cloud',
-                color: '#34C759',
-                universalUrl: 'https://tonhub.com/connect',
-                isInstalled: false,
-                isPopular: false
-            },
-            'bitget': {
-                name: 'Bitget Wallet',
-                icon: 'fas fa-exchange-alt',
-                color: '#FF9500',
-                universalUrl: 'https://web3.bitget.com/ton-connect',
-                isInstalled: this.installedWallets.has('bitget'),
-                isPopular: false
-            },
-            'openmask': {
-                name: 'OpenMask',
-                icon: 'fas fa-mask',
-                color: '#FF3B30',
-                universalUrl: 'https://openmask.io/connect',
-                isInstalled: false,
-                isPopular: false
-            }
-        };
-        
-        return wallets[name] || {
-            name: name,
-            icon: 'fas fa-wallet',
-            color: '#8E8E93',
-            universalUrl: null,
-            isInstalled: false,
-            isPopular: false
-        };
-    }
-    
-    // Get all available wallets
-    async getAvailableWallets() {
-        try {
-            const response = await fetch(CONFIG.WALLETS_LIST_URL);
-            const data = await response.json();
-            
-            // Filter and map wallets
-            const availableWallets = data
-                .filter(wallet => wallet.bridge && wallet.bridge.length > 0)
-                .map(wallet => ({
-                    id: wallet.app_name,
-                    name: wallet.name,
-                    image: wallet.image,
-                    about_url: wallet.about_url,
-                    universal_url: wallet.universal_url,
-                    bridge: wallet.bridge,
-                    platforms: wallet.platforms,
-                    isInstalled: this.installedWallets.has(wallet.app_name)
-                }));
-            
-            return availableWallets;
-        } catch (error) {
-            console.error('Failed to fetch wallets list:', error);
-            return this.getFallbackWallets();
-        }
-    }
-    
-    // Fallback wallets if API fails
-    getFallbackWallets() {
-        const wallets = [
-            'tonwallet',
-            'telegram-wallet',
-            'mytonwallet',
-            'tonhub',
-            'bitget',
-            'openmask'
-        ];
-        
-        return wallets.map(name => {
-            const details = this.getWalletDetails(name);
-            return {
-                id: name,
-                name: details.name,
-                isInstalled: details.isInstalled,
-                isPopular: details.isPopular,
-                universal_url: details.universalUrl
-            };
-        });
-    }
-}
-
 // ===== TON CONNECT INTEGRATION =====
-class TONConnectIntegration {
+class TONConnect {
     constructor() {
         this.connector = null;
-        this.tonConnectUI = null;
-        this.wallet = null;
-        this.isInitialized = false;
+        this.walletInfo = null;
+        this._initialized = false;
     }
     
-    // Initialize TON Connect
-    async initialize() {
+    async init() {
         try {
-            console.log('Initializing TON Connect...');
+            console.log('🚀 Initializing TON Connect...');
             
-            // Check if TON Connect UI is available
-            if (typeof TON_CONNECT_UI === 'undefined') {
-                throw new Error('TON Connect UI not loaded');
+            // Check if TON Connect SDK is loaded
+            if (typeof TonConnect === 'undefined') {
+                throw new Error('TON Connect SDK not loaded');
             }
             
             // Create manifest
             const manifest = {
                 url: window.location.origin,
                 name: CONFIG.APP_NAME,
-                iconUrl: 'https://ton-rocket-casino.vercel.app/icon.png',
-                termsOfUseUrl: 'https://ton-rocket-casino.vercel.app/terms',
-                privacyPolicyUrl: 'https://ton-rocket-casino.vercel.app/privacy'
+                iconUrl: window.location.origin + '/icon.png',
+                termsOfUseUrl: window.location.origin + '/terms',
+                privacyPolicyUrl: window.location.origin + '/privacy'
             };
             
-            // Initialize TON Connect UI
-            this.tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            // Initialize connector
+            this.connector = new TonConnect.TonConnectSDK({
                 manifest: manifest,
-                buttonRootId: 'tonconnect-button',
-                language: AppState.language,
-                uiPreferences: {
-                    theme: 'DARK',
-                    colorsSet: {
-                        [TON_CONNECT_UI.COLORS.CONNECT_BUTTON]: CONFIG.PRIMARY_COLOR,
-                        [TON_CONNECT_UI.COLORS.CONNECT_BUTTON_TEXT]: '#FFFFFF',
-                        [TON_CONNECT_UI.COLORS.MODAL_BACKGROUND]: '#1C1C1E',
-                        [TON_CONNECT_UI.COLORS.MODAL_TEXT]: '#FFFFFF'
-                    }
-                },
-                actionsConfiguration: {
-                    twaReturnUrl: 'https://t.me/tonrocket_bot'
-                }
-            });
-            
-            this.connector = this.tonConnectUI.connector;
-            this.isInitialized = true;
-            
-            console.log('TON Connect initialized successfully');
-            
-            // Subscribe to connection status changes
-            this.connector.onStatusChange(async (wallet) => {
-                console.log('Wallet status changed:', wallet);
-                
-                if (wallet) {
-                    await this.handleWalletConnected(wallet);
-                } else {
-                    this.handleWalletDisconnected();
+                wallet: {
+                    list: 'all'
                 }
             });
             
             // Check existing connection
+            const wallets = await this.connector.getWallets();
+            console.log('Available wallets:', wallets);
+            
             if (this.connector.connected) {
-                const wallet = this.connector.wallet;
-                if (wallet) {
-                    await this.handleWalletConnected(wallet);
-                }
+                await this.handleConnection(this.connector.wallet);
             }
             
+            // Subscribe to connection changes
+            this.connector.onStatusChange(async (wallet) => {
+                console.log('Wallet status changed:', wallet);
+                if (wallet) {
+                    await this.handleConnection(wallet);
+                } else {
+                    this.handleDisconnection();
+                }
+            });
+            
+            this._initialized = true;
+            console.log('✅ TON Connect initialized successfully');
             return true;
             
         } catch (error) {
-            console.error('TON Connect initialization failed:', error);
-            this.isInitialized = false;
+            console.error('❌ TON Connect initialization failed:', error);
+            this.showToast('TON Connect initialization failed', 'error');
             return false;
         }
     }
     
-    // Handle wallet connection
-    async handleWalletConnected(wallet) {
+    async handleConnection(wallet) {
         try {
-            console.log('Wallet connected:', wallet);
-            
+            this.walletInfo = wallet;
             AppState.wallet = wallet;
             AppState.isConnected = true;
+            AppState.isConnecting = false;
             
             // Create user object
             AppState.user = {
@@ -300,172 +122,138 @@ class TONConnectIntegration {
             // Update UI
             updateUserDisplay();
             
-            // Close connect modal
+            // Close modal
             closeConnectModal();
             
-            // Show success notification
-            showNotification('Wallet connected successfully!', 'success');
+            // Show success
+            this.showToast('Wallet connected successfully!', 'success');
             
             // Update balance
-            await this.updateWalletBalance();
+            await this.updateBalance();
             
-            // Navigate to dashboard if not already
+            // Update page if needed
             if (AppState.currentPage === 'dashboard') {
-                updateDashboard();
+                loadDashboard();
             }
             
-            // Save connection state
-            this.saveConnectionState();
+            // Save to localStorage
+            this.saveConnection();
             
         } catch (error) {
-            console.error('Error handling wallet connection:', error);
-            showNotification('Error processing wallet connection', 'error');
+            console.error('Connection handling error:', error);
+            this.showToast('Connection error', 'error');
         }
     }
     
-    // Handle wallet disconnection
-    handleWalletDisconnected() {
-        console.log('Wallet disconnected');
-        
+    handleDisconnection() {
+        this.walletInfo = null;
         AppState.wallet = null;
         AppState.user = null;
         AppState.isConnected = false;
+        AppState.isConnecting = false;
         
-        // Update UI
         updateUserDisplay();
-        
-        // Clear connection state
-        this.clearConnectionState();
-        
-        showNotification('Wallet disconnected', 'info');
+        this.showToast('Wallet disconnected', 'info');
+        this.clearConnection();
     }
     
-    // Connect to specific wallet
-    async connectToWallet(walletId) {
-        if (!this.isInitialized || !this.tonConnectUI) {
-            showNotification('TON Connect not initialized', 'error');
-            return;
+    async connect(wallet) {
+        if (!this._initialized) {
+            this.showToast('TON Connect not initialized', 'error');
+            return false;
         }
         
         try {
-            console.log('Connecting to wallet:', walletId);
+            AppState.isConnecting = true;
+            this.showToast(`Connecting to ${wallet.name}...`, 'info');
             
-            // Show loading state
-            showNotification(`Connecting to ${walletId}...`, 'info');
+            // Generate universal link
+            const universalLink = this.connector.connect({
+                bridgeUrl: wallet.bridge[0],
+                universalLink: wallet.universal_url
+            });
             
-            // Use TON Connect UI to connect
-            await this.tonConnectUI.connectWallet();
-            
-        } catch (error) {
-            console.error('Failed to connect to wallet:', error);
-            
-            // If TON Connect fails, try universal link
-            const wallet = walletIntegration.getWalletDetails(walletId);
-            if (wallet.universalUrl) {
-                this.openUniversalLink(wallet.universalUrl, wallet.name);
+            // Open wallet
+            if (wallet.universal_url) {
+                window.open(universalLink, '_blank');
             } else {
-                showNotification(`Failed to connect to ${walletId}`, 'error');
+                // Show QR code
+                this.generateQRCode(universalLink);
             }
-        }
-    }
-    
-    // Open universal link for wallet
-    openUniversalLink(url, walletName) {
-        if (!url) return;
-        
-        // Generate TON Connect deep link
-        const tonConnectLink = `${url}?v=2&id=${Date.now()}&ret=back`;
-        
-        // Open in new window
-        window.open(tonConnectLink, '_blank', 'noopener,noreferrer');
-        
-        showNotification(`Please confirm connection in ${walletName}`, 'info');
-    }
-    
-    // Disconnect wallet
-    async disconnectWallet() {
-        if (!this.isInitialized || !this.tonConnectUI) return;
-        
-        try {
-            await this.tonConnectUI.disconnect();
-            this.handleWalletDisconnected();
+            
+            return true;
+            
         } catch (error) {
-            console.error('Failed to disconnect wallet:', error);
-            showNotification('Failed to disconnect wallet', 'error');
+            console.error('Connection error:', error);
+            AppState.isConnecting = false;
+            this.showToast('Connection failed', 'error');
+            return false;
         }
     }
     
-    // Update wallet balance
-    async updateWalletBalance() {
-        if (!AppState.wallet || !AppState.user) return;
+    async disconnect() {
+        if (!this._initialized || !this.connector.connected) return;
         
         try {
-            const address = AppState.wallet.account.address;
-            const response = await fetch(`${CONFIG.TON_API_URL}/getAddressBalance?address=${address}&api_key=${CONFIG.TON_API_KEY}`);
+            await this.connector.disconnect();
+            this.handleDisconnection();
+        } catch (error) {
+            console.error('Disconnection error:', error);
+            this.showToast('Disconnection failed', 'error');
+        }
+    }
+    
+    generateQRCode(link) {
+        const qrContainer = document.getElementById('qr-container');
+        if (!qrContainer) return;
+        
+        qrContainer.innerHTML = '';
+        
+        QRCode.toCanvas(qrContainer, link, {
+            width: 180,
+            height: 180,
+            margin: 1,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        }, function(error) {
+            if (error) {
+                console.error('QR generation error:', error);
+                qrContainer.innerHTML = `
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#666;">
+                        <i class="fas fa-qrcode" style="font-size:48px;"></i>
+                        <span>QR Code Error</span>
+                    </div>
+                `;
+            }
+        });
+    }
+    
+    async updateBalance() {
+        if (!AppState.user || !AppState.wallet) return;
+        
+        try {
+            // Using TON Center API
+            const response = await fetch(
+                `https://toncenter.com/api/v2/getAddressBalance?address=${AppState.wallet.account.address}`
+            );
+            
             const data = await response.json();
             
             if (data.ok) {
-                // Convert nanoTON to TON
+                // Convert from nanoTON to TON
                 AppState.user.balance = parseFloat(data.result) / 1000000000;
                 updateUserDisplay();
             }
         } catch (error) {
-            console.error('Failed to fetch balance:', error);
+            console.error('Balance update error:', error);
             // Use demo balance
-            AppState.user.balance = 5.2;
+            AppState.user.balance = 12.85;
             updateUserDisplay();
         }
     }
     
-    // Generate QR code for wallet connection
-    async generateQRCode() {
-        if (!this.isInitialized || !this.connector) return;
-        
-        try {
-            const connectionSource = this.connector.connect({
-                bridgeUrl: 'https://bridge.tonapi.io/bridge'
-            });
-            
-            const { link, universalLink } = connectionSource;
-            
-            // Generate QR code
-            const qrContainer = document.getElementById('qr-container');
-            if (qrContainer) {
-                qrContainer.innerHTML = '';
-                
-                // Create QR code
-                const qrCode = document.createElement('div');
-                qrCode.id = 'tonconnect-qr';
-                
-                // Initialize QR code
-                QRCode.toCanvas(qrCode, link, {
-                    width: 180,
-                    height: 180,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                }, function(error) {
-                    if (error) {
-                        console.error('QR code generation failed:', error);
-                        showQRPlaceholder();
-                    }
-                });
-                
-                qrContainer.appendChild(qrCode);
-            }
-            
-            return { link, universalLink };
-            
-        } catch (error) {
-            console.error('QR code generation failed:', error);
-            showQRPlaceholder();
-            return null;
-        }
-    }
-    
-    // Helper functions
     getShortAddress(address) {
         if (!address) return '';
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -478,1474 +266,1590 @@ class TONConnectIntegration {
         return 'ROCKET' + (hash % 10000).toString().padStart(4, '0');
     }
     
-    saveConnectionState() {
-        localStorage.setItem('ton_connect_state', JSON.stringify({
-            isConnected: true,
+    saveConnection() {
+        localStorage.setItem('ton_connection', JSON.stringify({
             address: AppState.wallet?.account?.address,
             timestamp: Date.now()
         }));
     }
     
-    clearConnectionState() {
-        localStorage.removeItem('ton_connect_state');
+    clearConnection() {
+        localStorage.removeItem('ton_connection');
     }
     
-    loadConnectionState() {
-        const saved = localStorage.getItem('ton_connect_state');
+    loadConnection() {
+        const saved = localStorage.getItem('ton_connection');
         if (saved) {
             try {
-                const state = JSON.parse(saved);
-                if (state.isConnected && state.address) {
-                    return state;
-                }
+                return JSON.parse(saved);
             } catch (e) {
-                console.error('Failed to load connection state:', e);
+                return null;
             }
         }
         return null;
     }
-}
-
-// ===== UI UPDATES =====
-function updateUserDisplay() {
-    const userProfile = document.getElementById('user-profile');
-    const connectBtn = document.getElementById('connect-wallet-btn');
-    const disconnectBtn = document.getElementById('disconnect-btn');
-    const userName = document.getElementById('user-name');
-    const userBalance = document.getElementById('user-balance');
-    const sidebarUserName = document.getElementById('sidebar-user-name');
-    const totalWagered = document.getElementById('total-wagered');
-    const totalProfit = document.getElementById('total-profit');
     
-    if (AppState.isConnected && AppState.user) {
-        // Show user profile, hide connect button
-        if (userProfile) userProfile.classList.remove('hidden');
-        if (connectBtn) connectBtn.classList.add('hidden');
-        if (disconnectBtn) disconnectBtn.classList.remove('hidden');
-        
-        // Update user info
-        if (userName) userName.textContent = `@${AppState.user.name}`;
-        if (userBalance) userBalance.textContent = `${AppState.user.balance.toFixed(2)} TON`;
-        if (sidebarUserName) sidebarUserName.textContent = AppState.user.name;
-        if (totalWagered) totalWagered.textContent = `${AppState.user.totalWagered.toFixed(2)} TON`;
-        if (totalProfit) {
-            totalProfit.textContent = `${AppState.user.totalProfit.toFixed(2)} TON`;
-            totalProfit.className = `stat-value profit ${AppState.user.totalProfit >= 0 ? '' : 'negative'}`;
-        }
-        
-    } else {
-        // Show connect button, hide user profile
-        if (userProfile) userProfile.classList.add('hidden');
-        if (connectBtn) connectBtn.classList.remove('hidden');
-        if (disconnectBtn) disconnectBtn.classList.add('hidden');
-        
-        // Reset user info
-        if (userName) userName.textContent = '@player';
-        if (userBalance) userBalance.textContent = '0 TON';
-        if (sidebarUserName) sidebarUserName.textContent = 'Guest';
-        if (totalWagered) totalWagered.textContent = '0 TON';
-        if (totalProfit) {
-            totalProfit.textContent = '0 TON';
-            totalProfit.className = 'stat-value profit';
-        }
+    showToast(message, type = 'info') {
+        showNotification(message, type);
     }
 }
 
-function updateWalletsGrid() {
-    const walletsGrid = document.getElementById('wallets-grid');
-    if (!walletsGrid) return;
+// ===== WALLETS MANAGEMENT =====
+class WalletsManager {
+    constructor() {
+        this.wallets = [];
+        this.installedWallets = new Set();
+    }
     
-    // Clear loading state
-    walletsGrid.innerHTML = '';
-    
-    // Add wallet cards
-    AppState.wallets.forEach(wallet => {
-        const walletCard = document.createElement('div');
-        walletCard.className = 'wallet-card';
-        if (wallet.isInstalled) walletCard.classList.add('installed');
-        if (wallet.isPopular) walletCard.classList.add('popular');
+    async detectInstalledWallets() {
+        // Check for common wallet injections
+        const checks = [
+            { name: 'tonkeeper', check: () => window.tonkeeper !== undefined },
+            { name: 'mytonwallet', check: () => window.ton !== undefined },
+            { name: 'bitget', check: () => window.bitkeep !== undefined || window.bitget !== undefined },
+            { name: 'telegram', check: () => window.Telegram !== undefined && window.Telegram.WebApp !== undefined }
+        ];
         
-        const walletDetails = walletIntegration.getWalletDetails(wallet.id);
-        
-        walletCard.innerHTML = `
-            <div class="wallet-icon" style="background: ${walletDetails.color}">
-                <i class="${walletDetails.icon}"></i>
-            </div>
-            <div class="wallet-name">${walletDetails.name}</div>
-            <div class="wallet-status ${wallet.isInstalled ? 'status-installed' : 'status-available'}">
-                ${wallet.isInstalled ? 'Installed' : 'Available'}
-            </div>
-            ${wallet.isPopular ? '<div class="wallet-badge popular">Popular</div>' : ''}
-        `;
-        
-        walletCard.addEventListener('click', () => {
-            tonConnectIntegration.connectToWallet(wallet.id);
+        checks.forEach(check => {
+            try {
+                if (check.check()) {
+                    this.installedWallets.add(check.name);
+                }
+            } catch (e) {
+                console.log(`Check failed for ${check.name}:`, e);
+            }
         });
         
-        walletsGrid.appendChild(walletCard);
-    });
+        return Array.from(this.installedWallets);
+    }
+    
+    async loadWallets() {
+        try {
+            const response = await fetch(CONFIG.WALLETS_LIST_URL);
+            const data = await response.json();
+            
+            // Get popular wallets
+            const popularWallets = [
+                'tonwallet',      // Tonkeeper
+                'tonhub',         // Tonhub
+                'mytonwallet',    // MyTonWallet
+                'bitget',         // Bitget Wallet
+                'openmask'        // OpenMask
+            ];
+            
+            this.wallets = data
+                .filter(wallet => popularWallets.includes(wallet.app_name))
+                .map(wallet => ({
+                    ...wallet,
+                    isInstalled: this.installedWallets.has(wallet.app_name),
+                    isPopular: wallet.app_name === 'tonwallet' || wallet.app_name === 'tonhub'
+                }));
+            
+            return this.wallets;
+            
+        } catch (error) {
+            console.error('Failed to load wallets:', error);
+            return this.getDefaultWallets();
+        }
+    }
+    
+    getDefaultWallets() {
+        return [
+            {
+                app_name: 'tonwallet',
+                name: 'Tonkeeper',
+                image: 'https://tonkeeper.com/assets/tonconnect-icon.png',
+                about_url: 'https://tonkeeper.com',
+                universal_url: 'https://app.tonkeeper.com/ton-connect',
+                bridge: ['https://bridge.tonapi.io/bridge'],
+                platforms: ['ios', 'android', 'chrome', 'firefox'],
+                isInstalled: this.installedWallets.has('tonwallet'),
+                isPopular: true
+            },
+            {
+                app_name: 'telegram',
+                name: 'Telegram Wallet',
+                image: 'https://telegram.org/img/t_logo.png',
+                about_url: 'https://t.me/wallet',
+                universal_url: 'https://t.me/wallet',
+                bridge: ['https://bridge.tonapi.io/bridge'],
+                platforms: ['ios', 'android'],
+                isInstalled: this.installedWallets.has('telegram'),
+                isPopular: true
+            },
+            {
+                app_name: 'mytonwallet',
+                name: 'MyTonWallet',
+                image: 'https://mytonwallet.io/icon.png',
+                about_url: 'https://mytonwallet.io',
+                universal_url: 'https://connect.mytonwallet.org',
+                bridge: ['https://tonconnectbridge.mytonwallet.org/bridge/'],
+                platforms: ['chrome', 'firefox', 'safari'],
+                isInstalled: this.installedWallets.has('mytonwallet'),
+                isPopular: false
+            },
+            {
+                app_name: 'tonhub',
+                name: 'Tonhub',
+                image: 'https://tonhub.com/icon.png',
+                about_url: 'https://tonhub.com',
+                universal_url: 'https://tonhub.com/connect',
+                bridge: ['https://connect.tonhubapi.com/ton-connect'],
+                platforms: ['ios', 'android'],
+                isInstalled: false,
+                isPopular: true
+            }
+        ];
+    }
+    
+    getWalletIcon(name) {
+        const icons = {
+            'tonwallet': 'fas fa-shield-alt',
+            'telegram': 'fab fa-telegram',
+            'mytonwallet': 'fas fa-wallet',
+            'tonhub': 'fas fa-cloud',
+            'bitget': 'fas fa-exchange-alt',
+            'openmask': 'fas fa-mask'
+        };
+        return icons[name] || 'fas fa-wallet';
+    }
+    
+    getWalletColor(name) {
+        const colors = {
+            'tonwallet': 'tonkeeper',
+            'telegram': 'telegram',
+            'mytonwallet': 'mytonwallet',
+            'tonhub': 'tonhub',
+            'bitget': 'bitget',
+            'openmask': 'openmask'
+        };
+        return colors[name] || 'tonkeeper';
+    }
 }
 
-function showQRPlaceholder() {
-    const qrContainer = document.getElementById('qr-container');
-    if (qrContainer) {
-        qrContainer.innerHTML = `
-            <div class="qr-placeholder">
-                <i class="fas fa-qrcode"></i>
-                <p>QR code generation failed</p>
+// ===== UI MANAGER =====
+class UIManager {
+    constructor() {
+        this.tonConnect = new TONConnect();
+        this.walletsManager = new WalletsManager();
+    }
+    
+    async initialize() {
+        console.log('🚀 Initializing TON ROCKET...');
+        
+        // Show loader
+        this.showLoader();
+        
+        try {
+            // Detect installed wallets
+            await this.walletsManager.detectInstalledWallets();
+            
+            // Initialize TON Connect
+            const tonConnectReady = await this.tonConnect.init();
+            if (!tonConnectReady) {
+                throw new Error('TON Connect initialization failed');
+            }
+            
+            // Load wallets
+            AppState.wallets = await this.walletsManager.loadWallets();
+            
+            // Setup event listeners
+            this.setupEventListeners();
+            
+            // Check saved connection
+            const saved = this.tonConnect.loadConnection();
+            if (saved && saved.address) {
+                console.log('Found saved connection:', saved);
+                // You could try to restore connection here
+            }
+            
+            // Update UI
+            this.updateHeaderStats();
+            this.updateWalletsGrid();
+            
+            // Hide loader
+            setTimeout(() => {
+                this.hideLoader();
+                this.loadPage('dashboard');
+            }, 1500);
+            
+            console.log('✅ TON ROCKET initialized successfully');
+            
+        } catch (error) {
+            console.error('❌ Initialization failed:', error);
+            this.hideLoader();
+            this.showNotification('Failed to initialize app', 'error');
+        }
+    }
+    
+    showLoader() {
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.remove('hidden');
+    }
+    
+    hideLoader() {
+        const loader = document.getElementById('loader');
+        const app = document.getElementById('app');
+        
+        if (loader) {
+            loader.classList.add('hidden');
+        }
+        
+        if (app) {
+            app.classList.remove('hidden');
+        }
+    }
+    
+    updateUserDisplay() {
+        const userProfile = document.getElementById('user-profile');
+        const connectBtn = document.getElementById('connect-wallet-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const userName = document.getElementById('user-name');
+        const userBalance = document.getElementById('user-balance');
+        const sidebarUserName = document.getElementById('sidebar-user-name');
+        const totalWagered = document.getElementById('total-wagered');
+        const totalProfit = document.getElementById('total-profit');
+        
+        if (AppState.isConnected && AppState.user) {
+            // Show user profile
+            if (userProfile) userProfile.classList.remove('hidden');
+            if (connectBtn) connectBtn.classList.add('hidden');
+            if (disconnectBtn) disconnectBtn.classList.remove('hidden');
+            
+            // Update info
+            if (userName) userName.textContent = `@${AppState.user.name}`;
+            if (userBalance) userBalance.innerHTML = `<i class="fas fa-coins"></i><span>${AppState.user.balance.toFixed(2)} TON</span>`;
+            if (sidebarUserName) sidebarUserName.textContent = AppState.user.name;
+            if (totalWagered) totalWagered.textContent = `${AppState.user.totalWagered.toFixed(2)} TON`;
+            if (totalProfit) {
+                totalProfit.textContent = `${AppState.user.totalProfit.toFixed(2)} TON`;
+                totalProfit.className = `stat-value profit ${AppState.user.totalProfit >= 0 ? '' : 'negative'}`;
+            }
+        } else {
+            // Show connect button
+            if (userProfile) userProfile.classList.add('hidden');
+            if (connectBtn) connectBtn.classList.remove('hidden');
+            if (disconnectBtn) disconnectBtn.classList.add('hidden');
+            
+            // Reset info
+            if (userName) userName.textContent = '@cosmic_player';
+            if (userBalance) userBalance.innerHTML = '<i class="fas fa-coins"></i><span>0.00 TON</span>';
+            if (sidebarUserName) sidebarUserName.textContent = 'Guest Player';
+            if (totalWagered) totalWagered.textContent = '0 TON';
+            if (totalProfit) {
+                totalProfit.textContent = '0 TON';
+                totalProfit.className = 'stat-value profit';
+            }
+        }
+    }
+    
+    updateWalletsGrid() {
+        const walletsGrid = document.getElementById('wallets-grid');
+        if (!walletsGrid) return;
+        
+        walletsGrid.innerHTML = '';
+        
+        AppState.wallets.forEach(wallet => {
+            const walletCard = document.createElement('div');
+            walletCard.className = 'wallet-card';
+            if (wallet.isInstalled) walletCard.classList.add('installed');
+            if (wallet.isPopular) walletCard.classList.add('popular');
+            
+            const iconClass = this.walletsManager.getWalletIcon(wallet.app_name);
+            const colorClass = this.walletsManager.getWalletColor(wallet.app_name);
+            
+            walletCard.innerHTML = `
+                <div class="wallet-icon ${colorClass}">
+                    <i class="${iconClass}"></i>
+                </div>
+                <div class="wallet-name">${wallet.name}</div>
+                <div class="wallet-status ${wallet.isInstalled ? 'status-installed' : 'status-available'}">
+                    ${wallet.isInstalled ? 'Installed' : 'Available'}
+                </div>
+                ${wallet.isPopular ? '<div class="wallet-badge">POPULAR</div>' : ''}
+            `;
+            
+            walletCard.addEventListener('click', async () => {
+                if (AppState.isConnecting) return;
+                
+                try {
+                    await this.tonConnect.connect(wallet);
+                } catch (error) {
+                    console.error('Wallet connection error:', error);
+                    this.showNotification(`Failed to connect to ${wallet.name}`, 'error');
+                }
+            });
+            
+            walletsGrid.appendChild(walletCard);
+        });
+        
+        // Add Telegram wallet separately
+        const telegramWallet = {
+            app_name: 'telegram',
+            name: 'Wallet in Telegram',
+            isInstalled: this.walletsManager.installedWallets.has('telegram'),
+            isPopular: true
+        };
+        
+        const telegramCard = document.createElement('div');
+        telegramCard.className = `wallet-card ${telegramWallet.isInstalled ? 'installed' : ''} popular`;
+        telegramCard.innerHTML = `
+            <div class="wallet-icon telegram">
+                <i class="fab fa-telegram"></i>
+            </div>
+            <div class="wallet-name">Wallet in Telegram</div>
+            <div class="wallet-status ${telegramWallet.isInstalled ? 'status-installed' : 'status-available'}">
+                ${telegramWallet.isInstalled ? 'Installed' : 'Available'}
+            </div>
+            <div class="wallet-badge">TELEGRAM</div>
+        `;
+        
+        telegramCard.addEventListener('click', () => {
+            window.open('https://t.me/wallet', '_blank');
+            this.showNotification('Opening Telegram Wallet...', 'info');
+        });
+        
+        walletsGrid.prepend(telegramCard);
+    }
+    
+    updateHeaderStats() {
+        const onlineCount = document.querySelector('.stat-badge.online span');
+        const volumeElement = document.querySelector('.stat-badge.volume span');
+        
+        if (onlineCount) {
+            onlineCount.innerHTML = `<i class="fas fa-users"></i> ${CONFIG.DEMO_ONLINE_COUNT.toLocaleString()} Online`;
+        }
+        
+        if (volumeElement) {
+            volumeElement.innerHTML = `<i class="fas fa-chart-line"></i> 24h Vol: $${(CONFIG.DEMO_DAILY_VOLUME / 1000).toFixed(1)}K`;
+        }
+    }
+    
+    setupEventListeners() {
+        // Connect Wallet Button
+        document.getElementById('connect-wallet-btn')?.addEventListener('click', () => {
+            this.openConnectModal();
+        });
+        
+        // Disconnect Button
+        document.getElementById('disconnect-btn')?.addEventListener('click', async () => {
+            await this.tonConnect.disconnect();
+        });
+        
+        // Modal Controls
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => this.closeConnectModal());
+        });
+        
+        document.querySelector('.modal-overlay')?.addEventListener('click', () => {
+            this.closeConnectModal();
+        });
+        
+        // Menu Button
+        document.getElementById('menu-btn')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.add('active');
+        });
+        
+        // Close Sidebar
+        document.querySelectorAll('.close-sidebar').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('sidebar').classList.remove('active');
+            });
+        });
+        
+        // Navigation
+        document.querySelectorAll('.nav-item, .menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (item.hasAttribute('href') && item.getAttribute('href') !== '#') {
+                    return;
+                }
+                
+                e.preventDefault();
+                const page = item.dataset.page;
+                if (page) {
+                    this.loadPage(page);
+                    document.getElementById('sidebar').classList.remove('active');
+                }
+            });
+        });
+        
+        // Quick Deposit FAB
+        document.getElementById('quick-deposit')?.addEventListener('click', () => {
+            if (!AppState.isConnected) {
+                this.openConnectModal();
+                this.showNotification('Connect wallet to deposit', 'info');
+            } else {
+                // Show deposit modal
+                this.showNotification('Deposit feature coming soon!', 'info');
+            }
+        });
+        
+        // Theme Toggle
+        document.getElementById('theme-toggle')?.addEventListener('click', () => {
+            this.toggleTheme();
+        });
+    }
+    
+    openConnectModal() {
+        const modal = document.getElementById('connect-modal');
+        if (modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Generate QR code if TON Connect is initialized
+            if (this.tonConnect._initialized && this.tonConnect.connector) {
+                const universalLink = this.tonConnect.connector.connect({
+                    bridgeUrl: 'https://bridge.tonapi.io/bridge'
+                });
+                this.tonConnect.generateQRCode(universalLink);
+            }
+        }
+    }
+    
+    closeConnectModal() {
+        const modal = document.getElementById('connect-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+    
+    async loadPage(page) {
+        if (AppState.currentPage === page) return;
+        
+        // Update navigation
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item, .menu-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Show page
+        const pageElement = document.getElementById(`page-${page}`);
+        if (pageElement) {
+            pageElement.classList.add('active');
+            AppState.currentPage = page;
+        }
+        
+        // Update active nav items
+        document.querySelectorAll(`[data-page="${page}"]`).forEach(item => {
+            item.classList.add('active');
+        });
+        
+        // Update nav highlight
+        const navHighlight = document.querySelector('.nav-highlight');
+        const activeNav = document.querySelector(`.nav-item[data-page="${page}"]`);
+        if (navHighlight && activeNav) {
+            const navRect = activeNav.getBoundingClientRect();
+            const containerRect = activeNav.parentElement.getBoundingClientRect();
+            navHighlight.style.width = `${navRect.width}px`;
+            navHighlight.style.transform = `translateX(${navRect.left - containerRect.left}px)`;
+        }
+        
+        // Load page content
+        await this.loadPageContent(page);
+    }
+    
+    async loadPageContent(page) {
+        const pageElement = document.getElementById(`page-${page}`);
+        if (!pageElement) return;
+        
+        // Show loading
+        pageElement.innerHTML = `
+            <div class="loading-page">
+                <div class="loading-spinner">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <p>Loading ${page}...</p>
+            </div>
+        `;
+        
+        // Load page
+        switch(page) {
+            case 'dashboard':
+                await this.loadDashboard();
+                break;
+            case 'crash':
+                this.loadCrashGame();
+                break;
+            case 'mines':
+                this.loadMinesGame();
+                break;
+            case 'referral':
+                this.loadReferralPage();
+                break;
+            case 'bonuses':
+                this.loadBonusesPage();
+                break;
+            case 'leaderboard':
+                this.loadLeaderboard();
+                break;
+            default:
+                this.loadComingSoon(page);
+        }
+    }
+    
+    async loadDashboard() {
+        const page = document.getElementById('page-dashboard');
+        if (!page) return;
+        
+        const isConnected = AppState.isConnected;
+        const userName = AppState.user?.name || 'Player';
+        const userBalance = AppState.user?.balance || 0;
+        
+        page.innerHTML = `
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h1>Welcome to TON ROCKET 🚀</h1>
+                    <p class="subtitle">The Ultimate Crypto Casino Experience</p>
+                    
+                    ${!isConnected ? `
+                        <div class="connect-cta">
+                            <div class="cta-card">
+                                <div class="cta-icon">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div class="cta-content">
+                                    <h3>Connect Your Wallet</h3>
+                                    <p>Start playing and claim your welcome bonus!</p>
+                                </div>
+                                <button class="cta-btn" onclick="uiManager.openConnectModal()">
+                                    <i class="fas fa-plug"></i>
+                                    Connect Now
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <i class="fas fa-wallet"></i>
+                            <h4>Your Balance</h4>
+                        </div>
+                        <div class="stat-value">${userBalance.toFixed(2)} TON</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+2.5% today</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <i class="fas fa-users"></i>
+                            <h4>Online Players</h4>
+                        </div>
+                        <div class="stat-value">${CONFIG.DEMO_ONLINE_COUNT.toLocaleString()}</div>
+                        <div class="stat-change">
+                            <span>Live</span>
+                            <div class="pulse-dot"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <i class="fas fa-chart-line"></i>
+                            <h4>24h Volume</h4>
+                        </div>
+                        <div class="stat-value">$${(CONFIG.DEMO_DAILY_VOLUME / 1000).toFixed(1)}K</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+15.3%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <i class="fas fa-trophy"></i>
+                            <h4>Biggest Win</h4>
+                        </div>
+                        <div class="stat-value">$${(CONFIG.DEMO_BIGGEST_WIN / 1000).toFixed(1)}K</div>
+                        <div class="stat-change">
+                            <span>Today</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="games-section">
+                    <div class="section-header">
+                        <h2>🔥 Popular Games</h2>
+                        <a href="#" class="view-all" onclick="uiManager.loadPage('crash')">
+                            View All <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    <div class="games-grid">
+                        <div class="game-card" onclick="uiManager.loadPage('crash')">
+                            <div class="game-image" style="background: linear-gradient(135deg, #6366F1, #8B5CF6);">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Crash</h3>
+                                <p>Multiplier game with rockets</p>
+                                <div class="game-stats">
+                                    <span class="players">2.4k playing</span>
+                                    <span class="profit positive">+18% ROI</span>
+                                </div>
+                            </div>
+                            <div class="game-badge hot">HOT</div>
+                        </div>
+                        
+                        <div class="game-card" onclick="uiManager.loadPage('mines')">
+                            <div class="game-image" style="background: linear-gradient(135deg, #EC4899, #F472B6);">
+                                <i class="fas fa-bomb"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Mines</h3>
+                                <p>Find diamonds, avoid mines</p>
+                                <div class="game-stats">
+                                    <span class="players">1.8k playing</span>
+                                    <span class="profit positive">+12% ROI</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="game-card" onclick="uiManager.loadPage('plinko')">
+                            <div class="game-image" style="background: linear-gradient(135deg, #10B981, #34D399);">
+                                <i class="fas fa-basketball-ball"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Plinko</h3>
+                                <p>Classic drop game</p>
+                                <div class="game-stats">
+                                    <span class="players">1.2k playing</span>
+                                    <span class="profit positive">+8% ROI</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="game-card" onclick="uiManager.loadPage('dice')">
+                            <div class="game-image" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
+                                <i class="fas fa-dice"></i>
+                            </div>
+                            <div class="game-info">
+                                <h3>Dice</h3>
+                                <p>Roll and win big</p>
+                                <div class="game-stats">
+                                    <span class="players">956 playing</span>
+                                    <span class="profit positive">+10% ROI</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${isConnected ? `
+                    <div class="user-section">
+                        <div class="section-header">
+                            <h2>📊 Your Stats</h2>
+                        </div>
+                        
+                        <div class="user-stats">
+                            <div class="user-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Win Rate</div>
+                                    <div class="stat-value">68.5%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Total Wagered</div>
+                                    <div class="stat-value">${AppState.user.totalWagered.toFixed(2)} TON</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Biggest Win</div>
+                                    <div class="stat-value">12.8 TON</div>
+                                </div>
+                            </div>
+                            
+                            <div class="user-stat">
+                                <div class="stat-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Current Streak</div>
+                                    <div class="stat-value">5 Wins</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="promo-section">
+                    <div class="promo-card">
+                        <div class="promo-content">
+                            <h3>🎁 Welcome Bonus!</h3>
+                            <p>Get <strong>0.5 TON</strong> free on your first deposit</p>
+                            ${!isConnected ? `
+                                <button class="promo-btn" onclick="uiManager.openConnectModal()">
+                                    <i class="fas fa-gift"></i>
+                                    Claim Bonus
+                                </button>
+                            ` : `
+                                <button class="promo-btn" onclick="uiManager.claimBonus()">
+                                    <i class="fas fa-gift"></i>
+                                    Claim Now
+                                </button>
+                            `}
+                        </div>
+                        <div class="promo-image">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add dashboard styles
+        this.addDashboardStyles();
+    }
+    
+    addDashboardStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .dashboard {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            
+            .dashboard-header {
+                text-align: center;
+                margin-bottom: var(--space-2xl);
+            }
+            
+            .dashboard-header h1 {
+                font-size: 48px;
+                font-weight: 900;
+                background: var(--gradient-primary);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: var(--space-sm);
+                font-family: 'Space Grotesk', sans-serif;
+            }
+            
+            .dashboard-header .subtitle {
+                font-size: 18px;
+                color: var(--text-secondary);
+                font-weight: 500;
+                margin-bottom: var(--space-xl);
+            }
+            
+            .connect-cta {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .cta-card {
+                background: var(--gradient-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-xl);
+                padding: var(--space-xl);
+                display: flex;
+                align-items: center;
+                gap: var(--space-xl);
+                box-shadow: var(--shadow-glow);
+            }
+            
+            .cta-icon {
+                width: 80px;
+                height: 80px;
+                background: var(--gradient-primary);
+                border-radius: var(--radius-lg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            
+            .cta-icon i {
+                font-size: 32px;
+                color: white;
+            }
+            
+            .cta-content {
+                flex: 1;
+            }
+            
+            .cta-content h3 {
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-bottom: var(--space-xs);
+            }
+            
+            .cta-content p {
+                font-size: 14px;
+                color: var(--text-secondary);
+            }
+            
+            .cta-btn {
+                background: var(--gradient-primary);
+                border: none;
+                border-radius: var(--radius-lg);
+                padding: 16px 32px;
+                color: white;
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: var(--space-sm);
+                transition: all var(--transition-fast);
+                white-space: nowrap;
+            }
+            
+            .cta-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-glow-lg);
+            }
+            
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: var(--space-lg);
+                margin-bottom: var(--space-2xl);
+            }
+            
+            @media (max-width: 1200px) {
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            @media (max-width: 640px) {
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            .stat-card {
+                background: var(--gradient-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                padding: var(--space-xl);
+                transition: all var(--transition-fast);
+            }
+            
+            .stat-card:hover {
+                border-color: var(--primary);
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-glow);
+            }
+            
+            .stat-header {
+                display: flex;
+                align-items: center;
+                gap: var(--space-sm);
+                margin-bottom: var(--space-lg);
+            }
+            
+            .stat-header i {
+                font-size: 20px;
+                color: var(--primary);
+            }
+            
+            .stat-header h4 {
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .stat-value {
+                font-size: 32px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-bottom: var(--space-sm);
+                line-height: 1;
+            }
+            
+            .stat-change {
+                display: flex;
+                align-items: center;
+                gap: var(--space-xs);
+                font-size: 12px;
+                font-weight: 600;
+            }
+            
+            .stat-change.positive {
+                color: var(--success);
+            }
+            
+            .stat-change .pulse-dot {
+                width: 8px;
+                height: 8px;
+                background: var(--success);
+                border-radius: 50%;
+                animation: pulse 2s ease-in-out infinite;
+            }
+            
+            .section-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: var(--space-xl);
+            }
+            
+            .section-header h2 {
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--text-primary);
+            }
+            
+            .view-all {
+                display: flex;
+                align-items: center;
+                gap: var(--space-xs);
+                color: var(--primary);
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all var(--transition-fast);
+            }
+            
+            .view-all:hover {
+                gap: var(--space-sm);
+            }
+            
+            .games-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: var(--space-lg);
+                margin-bottom: var(--space-2xl);
+            }
+            
+            @media (max-width: 1200px) {
+                .games-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            @media (max-width: 640px) {
+                .games-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            .game-card {
+                background: var(--gradient-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-xl);
+                padding: var(--space-lg);
+                cursor: pointer;
+                transition: all var(--transition-fast);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .game-card:hover {
+                border-color: var(--primary);
+                transform: translateY(-8px);
+                box-shadow: var(--shadow-glow-lg);
+            }
+            
+            .game-image {
+                width: 64px;
+                height: 64px;
+                border-radius: var(--radius-lg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: var(--space-lg);
+            }
+            
+            .game-image i {
+                font-size: 28px;
+                color: white;
+            }
+            
+            .game-info h3 {
+                font-size: 20px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin-bottom: var(--space-xs);
+            }
+            
+            .game-info p {
+                font-size: 14px;
+                color: var(--text-secondary);
+                margin-bottom: var(--space-md);
+            }
+            
+            .game-stats {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            
+            .game-stats .players {
+                color: var(--text-secondary);
+            }
+            
+            .game-stats .profit {
+                color: var(--success);
+            }
+            
+            .game-badge {
+                position: absolute;
+                top: var(--space-lg);
+                right: var(--space-lg);
+                background: var(--gradient-primary);
+                color: white;
+                font-size: 10px;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: var(--radius-full);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .game-badge.hot {
+                background: linear-gradient(135deg, #EF4444, #F59E0B);
+            }
+            
+            .user-stats {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: var(--space-lg);
+                margin-bottom: var(--space-2xl);
+            }
+            
+            @media (max-width: 1200px) {
+                .user-stats {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            @media (max-width: 640px) {
+                .user-stats {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            .user-stat {
+                background: var(--gradient-card);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                padding: var(--space-xl);
+                display: flex;
+                align-items: center;
+                gap: var(--space-lg);
+            }
+            
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                background: rgba(99, 102, 241, 0.1);
+                border-radius: var(--radius-lg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .stat-icon i {
+                font-size: 20px;
+                color: var(--primary);
+            }
+            
+            .stat-content {
+                flex: 1;
+            }
+            
+            .stat-label {
+                font-size: 12px;
+                color: var(--text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: var(--space-xs);
+            }
+            
+            .stat-content .stat-value {
+                font-size: 20px;
+                font-weight: 800;
+                color: var(--text-primary);
+                margin: 0;
+            }
+            
+            .promo-card {
+                background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+                border-radius: var(--radius-xl);
+                padding: var(--space-2xl);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .promo-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: var(--gradient-glow);
+                animation: slideGlow 3s ease-in-out infinite;
+            }
+            
+            .promo-content {
+                position: relative;
+                z-index: 1;
+                flex: 1;
+            }
+            
+            .promo-content h3 {
+                font-size: 32px;
+                font-weight: 900;
+                color: white;
+                margin-bottom: var(--space-sm);
+            }
+            
+            .promo-content p {
+                font-size: 18px;
+                color: rgba(255, 255, 255, 0.9);
+                margin-bottom: var(--space-xl);
+            }
+            
+            .promo-btn {
+                background: white;
+                color: var(--primary);
+                border: none;
+                border-radius: var(--radius-lg);
+                padding: 16px 32px;
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: var(--space-sm);
+                transition: all var(--transition-fast);
+            }
+            
+            .promo-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+            }
+            
+            .promo-image {
+                position: relative;
+                z-index: 1;
+                width: 120px;
+                height: 120px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: var(--radius-xl);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+            }
+            
+            .promo-image i {
+                font-size: 48px;
+                color: white;
+                animation: rocketLaunch 2s ease-in-out infinite;
+            }
+            
+            .loading-page {
+                text-align: center;
+                padding: var(--space-2xl);
+                color: var(--text-secondary);
+            }
+            
+            .loading-spinner {
+                width: 80px;
+                height: 80px;
+                margin: 0 auto var(--space-lg);
+                position: relative;
+            }
+            
+            .loading-spinner i {
+                font-size: 48px;
+                color: var(--primary);
+                animation: rocketLaunch 2s ease-in-out infinite;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    loadCrashGame() {
+        const page = document.getElementById('page-crash');
+        if (!page) return;
+        
+        page.innerHTML = `
+            <div class="game-page">
+                <div class="game-header">
+                    <h1>🚀 Crash Game</h1>
+                    <p>Place your bet and watch the rocket fly!</p>
+                </div>
+                
+                ${!AppState.isConnected ? `
+                    <div class="connect-required">
+                        <div class="connect-card">
+                            <i class="fas fa-wallet"></i>
+                            <h3>Connect Your Wallet</h3>
+                            <p>You need to connect a TON wallet to play Crash</p>
+                            <button class="connect-btn" onclick="uiManager.openConnectModal()">
+                                Connect Wallet
+                            </button>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="game-coming-soon">
+                        <div class="coming-soon-card">
+                            <i class="fas fa-tools"></i>
+                            <h3>Game Under Development</h3>
+                            <p>Crash game is coming soon! Stay tuned for launch.</p>
+                            <div class="countdown">
+                                <div class="countdown-item">
+                                    <span class="number">00</span>
+                                    <span class="label">Days</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="number">00</span>
+                                    <span class="label">Hours</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="number">00</span>
+                                    <span class="label">Minutes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `}
             </div>
         `;
     }
-}
-
-// ===== MODAL CONTROLS =====
-function openConnectModal() {
-    const modal = document.getElementById('connect-modal');
-    if (modal) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+    
+    loadMinesGame() {
+        const page = document.getElementById('page-mines');
+        if (!page) return;
         
-        // Generate QR code
-        if (tonConnectIntegration.isInitialized) {
-            tonConnectIntegration.generateQRCode();
-        }
-        
-        // Update wallets list
-        updateWalletsGrid();
-    }
-}
-
-function closeConnectModal() {
-    const modal = document.getElementById('connect-modal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-
-// ===== NAVIGATION =====
-function navigateTo(page) {
-    if (AppState.currentPage === page) return;
-    
-    // Update active state
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.menu-item, .nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    
-    // Show new page
-    const pageElement = document.getElementById(`page-${page}`);
-    if (pageElement) {
-        pageElement.classList.add('active');
-        AppState.currentPage = page;
-    }
-    
-    // Update navigation items
-    document.querySelectorAll(`[data-page="${page}"]`).forEach(item => {
-        item.classList.add('active');
-    });
-    
-    // Close sidebar on mobile
-    if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.remove('active');
-    }
-    
-    // Load page content
-    loadPageContent(page);
-}
-
-async function loadPageContent(page) {
-    const pageElement = document.getElementById(`page-${page}`);
-    if (!pageElement) return;
-    
-    // Show loading state
-    pageElement.innerHTML = `
-        <div class="loading-content">
-            <div class="spinner"></div>
-            <p>Loading ${page}...</p>
-        </div>
-    `;
-    
-    // Load page specific content
-    switch(page) {
-        case 'dashboard':
-            await loadDashboard();
-            break;
-        case 'crash':
-            loadCrashGame();
-            break;
-        case 'mines':
-            loadMinesGame();
-            break;
-        case 'plinko':
-            loadPlinkoGame();
-            break;
-        case 'dice':
-            loadDiceGame();
-            break;
-        case 'referral':
-            loadReferralPage();
-            break;
-        case 'bonuses':
-            loadBonusesPage();
-            break;
-        case 'leaderboard':
-            loadLeaderboard();
-            break;
-        case 'transactions':
-            loadTransactions();
-            break;
-        case 'support':
-            loadSupportPage();
-            break;
-    }
-}
-
-// ===== PAGE CONTENT =====
-async function loadDashboard() {
-    const page = document.getElementById('page-dashboard');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="dashboard-container">
-            <div class="welcome-section">
-                <h1>Welcome to TON Rocket 🚀</h1>
-                <p class="subtitle">Premium casino experience on TON blockchain</p>
+        page.innerHTML = `
+            <div class="game-page">
+                <div class="game-header">
+                    <h1>💣 Mines Game</h1>
+                    <p>Find diamonds and avoid the mines!</p>
+                </div>
                 
                 ${!AppState.isConnected ? `
-                    <div class="connect-promo">
-                        <p>Connect your wallet to start playing and claim your welcome bonus!</p>
-                        <button class="connect-promo-btn" onclick="openConnectModal()">
-                            <i class="fas fa-bolt"></i>
-                            Connect Wallet Now
-                        </button>
+                    <div class="connect-required">
+                        <div class="connect-card">
+                            <i class="fas fa-wallet"></i>
+                            <h3>Connect Your Wallet</h3>
+                            <p>You need to connect a TON wallet to play Mines</p>
+                            <button class="connect-btn" onclick="uiManager.openConnectModal()">
+                                Connect Wallet
+                            </button>
+                        </div>
                     </div>
-                ` : ''}
+                ` : `
+                    <div class="game-coming-soon">
+                        <div class="coming-soon-card">
+                            <i class="fas fa-tools"></i>
+                            <h3>Game Under Development</h3>
+                            <p>Mines game is coming soon! Stay tuned for launch.</p>
+                            <div class="countdown">
+                                <div class="countdown-item">
+                                    <span class="number">00</span>
+                                    <span class="label">Days</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="number">00</span>
+                                    <span class="label">Hours</span>
+                                </div>
+                                <div class="countdown-item">
+                                    <span class="number">00</span>
+                                    <span class="label">Minutes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `}
             </div>
-            
-            <div class="stats-cards">
-                <div class="stat-card-large">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value">${CONFIG.DEMO_ONLINE_COUNT.toLocaleString()}</div>
-                        <div class="stat-label">Players Online</div>
-                    </div>
+        `;
+    }
+    
+    loadReferralPage() {
+        const page = document.getElementById('page-referral');
+        if (!page) return;
+        
+        const referralCode = AppState.user?.referralCode || 'CONNECT-WALLET';
+        
+        page.innerHTML = `
+            <div class="referral-page">
+                <div class="page-header">
+                    <h1>👥 Referral Program</h1>
+                    <p>Earn 5% commission from your friends' bets</p>
                 </div>
                 
-                <div class="stat-card-large">
-                    <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-content">
-                        <div class="stat-value">${CONFIG.DEMO_DAILY_VOLUME.toLocaleString()} TON</div>
-                        <div class="stat-label">Daily Volume</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="games-grid">
-                <h2 class="section-title">Popular Games</h2>
-                <div class="games-list">
-                    <div class="game-card" onclick="navigateTo('crash')">
-                        <div class="game-icon" style="background: var(--gradient-primary)">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <div class="game-info">
-                            <h3>Crash</h3>
-                            <p>Multiplier game</p>
-                            <div class="game-stats">
-                                <span class="online">1.2k playing</span>
-                                <span class="profit">+15% ROI</span>
-                            </div>
-                        </div>
-                        <div class="game-badge hot">HOT</div>
-                    </div>
-                    
-                    <div class="game-card" onclick="navigateTo('mines')">
-                        <div class="game-icon" style="background: var(--gradient-warning)">
-                            <i class="fas fa-bomb"></i>
-                        </div>
-                        <div class="game-info">
-                            <h3>Mines</h3>
-                            <p>Strategy game</p>
-                            <div class="game-stats">
-                                <span class="online">856 playing</span>
-                                <span class="profit">+12% ROI</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card" onclick="navigateTo('plinko')">
-                        <div class="game-icon" style="background: var(--gradient-success)">
-                            <i class="fas fa-basketball-ball"></i>
-                        </div>
-                        <div class="game-info">
-                            <h3>Plinko</h3>
-                            <p>Luck-based game</p>
-                            <div class="game-stats">
-                                <span class="online">642 playing</span>
-                                <span class="profit">+8% ROI</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="game-card" onclick="navigateTo('dice')">
-                        <div class="game-icon" style="background: var(--gradient-danger)">
-                            <i class="fas fa-dice"></i>
-                        </div>
-                        <div class="game-info">
-                            <h3>Dice</h3>
-                            <p>Classic dice game</p>
-                            <div class="game-stats">
-                                <span class="online">458 playing</span>
-                                <span class="profit">+10% ROI</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            ${AppState.isConnected ? `
-                <div class="user-stats">
-                    <h2 class="section-title">Your Statistics</h2>
-                    <div class="stats-grid">
-                        <div class="user-stat">
-                            <div class="stat-label">Total Bets</div>
-                            <div class="stat-value">42</div>
-                        </div>
-                        <div class="user-stat">
-                            <div class="stat-label">Win Rate</div>
-                            <div class="stat-value success">65%</div>
-                        </div>
-                        <div class="user-stat">
-                            <div class="stat-label">Biggest Win</div>
-                            <div class="stat-value">12.5 TON</div>
-                        </div>
-                        <div class="user-stat">
-                            <div class="stat-label">Current Streak</div>
-                            <div class="stat-value warning">3 Wins</div>
-                        </div>
-                    </div>
-                </div>
-            ` : ''}
-            
-            <div class="promo-banner">
-                <div class="promo-content">
-                    <h3>🎁 Welcome Bonus!</h3>
-                    <p>Get 0.5 TON free on your first deposit</p>
-                    ${!AppState.isConnected ? `
-                        <button class="promo-btn" onclick="openConnectModal()">
-                            Claim Bonus
-                        </button>
-                    ` : `
-                        <button class="promo-btn" onclick="claimWelcomeBonus()">
-                            Claim Now
-                        </button>
-                    `}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Add CSS for dashboard
-    const style = document.createElement('style');
-    style.textContent = `
-        .dashboard-container {
-            padding: var(--spacing-sm);
-        }
-        
-        .welcome-section {
-            text-align: center;
-            margin-bottom: var(--spacing-xl);
-            padding: var(--spacing-lg);
-            background: var(--gradient-primary);
-            border-radius: var(--radius-lg);
-            color: white;
-        }
-        
-        .welcome-section h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .welcome-section .subtitle {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: var(--spacing-lg);
-        }
-        
-        .connect-promo {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-md);
-            backdrop-filter: blur(10px);
-        }
-        
-        .connect-promo p {
-            margin-bottom: var(--spacing-md);
-            font-size: 14px;
-        }
-        
-        .connect-promo-btn {
-            background: white;
-            color: var(--primary);
-            border: none;
-            padding: 12px 24px;
-            border-radius: var(--radius-full);
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            transition: all var(--transition-fast);
-        }
-        
-        .connect-promo-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-xl);
-        }
-        
-        .stat-card-large {
-            background: var(--bg-tertiary);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-md);
-        }
-        
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--gradient-primary);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .stat-icon i {
-            font-size: 20px;
-            color: white;
-        }
-        
-        .stat-content .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--text-primary);
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-        
-        .stat-content .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .games-list {
-            display: grid;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-xl);
-        }
-        
-        .game-card {
-            background: var(--bg-tertiary);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-md);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-md);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            position: relative;
-        }
-        
-        .game-card:hover {
-            background: var(--bg-surface);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .game-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: var(--radius-lg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .game-icon i {
-            font-size: 24px;
-            color: white;
-        }
-        
-        .game-info {
-            flex: 1;
-        }
-        
-        .game-info h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 2px;
-        }
-        
-        .game-info p {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .game-stats {
-            display: flex;
-            gap: var(--spacing-md);
-            font-size: 11px;
-        }
-        
-        .game-stats .online {
-            color: var(--text-secondary);
-        }
-        
-        .game-stats .profit {
-            color: var(--success);
-            font-weight: 600;
-        }
-        
-        .game-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: var(--gradient-danger);
-            color: white;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 4px 8px;
-            border-radius: var(--radius-full);
-        }
-        
-        .game-badge.hot {
-            background: var(--gradient-danger);
-        }
-        
-        .user-stats {
-            margin-bottom: var(--spacing-xl);
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-md);
-        }
-        
-        .user-stat {
-            background: var(--bg-tertiary);
-            border-radius: var(--radius-md);
-            padding: var(--spacing-md);
-            text-align: center;
-        }
-        
-        .user-stat .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .user-stat .stat-value {
-            font-size: 20px;
-            font-weight: 800;
-            color: var(--text-primary);
-        }
-        
-        .user-stat .stat-value.success {
-            color: var(--success);
-        }
-        
-        .user-stat .stat-value.warning {
-            color: var(--warning);
-        }
-        
-        .promo-banner {
-            background: var(--gradient-warning);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            text-align: center;
-            color: #000;
-        }
-        
-        .promo-content h3 {
-            font-size: 20px;
-            font-weight: 800;
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .promo-content p {
-            margin-bottom: var(--spacing-md);
-            font-weight: 500;
-        }
-        
-        .promo-btn {
-            background: #000;
-            color: var(--warning);
-            border: none;
-            padding: 10px 24px;
-            border-radius: var(--radius-full);
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-        
-        .promo-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .loading-content {
-            text-align: center;
-            padding: var(--spacing-2xl);
-            color: var(--text-secondary);
-        }
-        
-        .loading-content .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto var(--spacing-md);
-        }
-        
-        @media (max-width: 480px) {
-            .stats-cards,
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .welcome-section h1 {
-                font-size: 24px;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-function loadCrashGame() {
-    const page = document.getElementById('page-crash');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="game-container">
-            <div class="game-header">
-                <h1>🚀 Crash Game</h1>
-                <p>Place your bet and watch the rocket fly!</p>
-            </div>
-            
-            ${!AppState.isConnected ? `
-                <div class="connect-required">
-                    <i class="fas fa-wallet"></i>
-                    <h3>Connect your wallet to play</h3>
-                    <p>You need to connect a TON wallet to start playing</p>
-                    <button class="connect-game-btn" onclick="openConnectModal()">
-                        Connect Wallet
-                    </button>
-                </div>
-            ` : `
-                <div class="crash-game">
-                    <!-- Game will be implemented here -->
-                    <div class="coming-soon">
-                        <i class="fas fa-tools"></i>
-                        <h3>Game under development</h3>
-                        <p>Crash game coming soon!</p>
-                    </div>
-                </div>
-            `}
-        </div>
-    `;
-}
-
-function loadMinesGame() {
-    const page = document.getElementById('page-mines');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="game-container">
-            <div class="game-header">
-                <h1>💣 Mines Game</h1>
-                <p>Find diamonds and avoid the mines!</p>
-            </div>
-            
-            ${!AppState.isConnected ? `
-                <div class="connect-required">
-                    <i class="fas fa-wallet"></i>
-                    <h3>Connect your wallet to play</h3>
-                    <p>You need to connect a TON wallet to start playing</p>
-                    <button class="connect-game-btn" onclick="openConnectModal()">
-                        Connect Wallet
-                    </button>
-                </div>
-            ` : `
-                <div class="mines-game">
-                    <!-- Game will be implemented here -->
-                    <div class="coming-soon">
-                        <i class="fas fa-tools"></i>
-                        <h3>Game under development</h3>
-                        <p>Mines game coming soon!</p>
-                    </div>
-                </div>
-            `}
-        </div>
-    `;
-}
-
-function loadPlinkoGame() {
-    // Similar structure as other games
-    const page = document.getElementById('page-plinko');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="game-container">
-            <div class="game-header">
-                <h1>🎯 Plinko Game</h1>
-                <p>Drop the ball and win big!</p>
-            </div>
-            
-            ${!AppState.isConnected ? `
-                <div class="connect-required">
-                    <i class="fas fa-wallet"></i>
-                    <h3>Connect your wallet to play</h3>
-                    <p>You need to connect a TON wallet to start playing</p>
-                    <button class="connect-game-btn" onclick="openConnectModal()">
-                        Connect Wallet
-                    </button>
-                </div>
-            ` : `
-                <div class="plinko-game">
-                    <div class="coming-soon">
-                        <i class="fas fa-tools"></i>
-                        <h3>Game under development</h3>
-                        <p>Plinko game coming soon!</p>
-                    </div>
-                </div>
-            `}
-        </div>
-    `;
-}
-
-function loadDiceGame() {
-    // Similar structure as other games
-    const page = document.getElementById('page-dice');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="game-container">
-            <div class="game-header">
-                <h1>🎲 Dice Game</h1>
-                <p>Classic dice game with crypto rewards</p>
-            </div>
-            
-            ${!AppState.isConnected ? `
-                <div class="connect-required">
-                    <i class="fas fa-wallet"></i>
-                    <h3>Connect your wallet to play</h3>
-                    <p>You need to connect a TON wallet to start playing</p>
-                    <button class="connect-game-btn" onclick="openConnectModal()">
-                        Connect Wallet
-                    </button>
-                </div>
-            ` : `
-                <div class="dice-game">
-                    <div class="coming-soon">
-                        <i class="fas fa-tools"></i>
-                        <h3>Game under development</h3>
-                        <p>Dice game coming soon!</p>
-                    </div>
-                </div>
-            `}
-        </div>
-    `;
-}
-
-function loadReferralPage() {
-    const page = document.getElementById('page-referral');
-    if (!page) return;
-    
-    const referralCode = AppState.user?.referralCode || 'CONNECT-WALLET';
-    
-    page.innerHTML = `
-        <div class="referral-container">
-            <div class="referral-header">
-                <h1>👥 Referral Program</h1>
-                <p>Earn 5% from your friends' bets</p>
-            </div>
-            
-            <div class="referral-stats">
-                <div class="referral-stat">
-                    <div class="stat-icon">
+                <div class="referral-stats">
+                    <div class="referral-stat-card">
                         <i class="fas fa-users"></i>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Total Referrals</div>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Total Referrals</div>
-                    </div>
-                </div>
-                
-                <div class="referral-stat">
-                    <div class="stat-icon">
+                    
+                    <div class="referral-stat-card">
                         <i class="fas fa-coins"></i>
+                        <div class="stat-content">
+                            <div class="stat-value">0 TON</div>
+                            <div class="stat-label">Total Earned</div>
+                        </div>
                     </div>
-                    <div class="stat-info">
-                        <div class="stat-value">0 TON</div>
-                        <div class="stat-label">Total Earned</div>
+                    
+                    <div class="referral-stat-card">
+                        <i class="fas fa-clock"></i>
+                        <div class="stat-content">
+                            <div class="stat-value">0 TON</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="referral-stat">
-                    <div class="stat-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <div class="stat-value">0 TON</div>
-                        <div class="stat-label">Pending Rewards</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="referral-code-card">
-                <div class="code-header">
-                    <i class="fas fa-link"></i>
+                <div class="referral-code-section">
                     <h3>Your Referral Code</h3>
+                    <div class="code-display">
+                        <code>${referralCode}</code>
+                        <button class="copy-btn" onclick="copyToClipboard('${referralCode}')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="code-display">
-                    <code>${referralCode}</code>
-                    <button class="copy-btn" onclick="copyToClipboard('${referralCode}')">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-                <p class="code-hint">Share this code with your friends</p>
-            </div>
-            
-            <div class="referral-link-card">
-                <div class="link-header">
-                    <i class="fas fa-share-alt"></i>
+                
+                <div class="referral-link-section">
                     <h3>Your Referral Link</h3>
-                </div>
-                <div class="link-display">
-                    <span>https://tonrocket.com/ref/${referralCode}</span>
-                    <button class="copy-btn" onclick="copyToClipboard('https://tonrocket.com/ref/${referralCode}')">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-                <div class="social-share">
-                    <button class="social-btn telegram" onclick="shareToTelegram('${referralCode}')">
-                        <i class="fab fa-telegram"></i>
-                    </button>
-                    <button class="social-btn twitter" onclick="shareToTwitter('${referralCode}')">
-                        <i class="fab fa-twitter"></i>
-                    </button>
-                    <button class="social-btn whatsapp" onclick="shareToWhatsApp('${referralCode}')">
-                        <i class="fab fa-whatsapp"></i>
-                    </button>
+                    <div class="link-display">
+                        <span>https://tonrocket.com/ref/${referralCode}</span>
+                        <button class="copy-btn" onclick="copyToClipboard('https://tonrocket.com/ref/${referralCode}')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="referral-info">
-                <h3>How it works</h3>
-                <ul>
-                    <li>Share your referral link with friends</li>
-                    <li>They sign up and make their first deposit</li>
-                    <li>You earn 5% of their bets forever</li>
-                    <li>Withdraw your earnings anytime</li>
-                </ul>
-            </div>
-        </div>
-    `;
-}
-
-function loadBonusesPage() {
-    const page = document.getElementById('page-bonuses');
-    if (!page) return;
+        `;
+    }
     
-    page.innerHTML = `
-        <div class="bonuses-container">
-            <div class="bonuses-header">
-                <h1>🎁 Bonuses & Rewards</h1>
-                <p>Claim your bonuses and increase your balance</p>
-            </div>
-            
-            <div class="daily-bonus-card">
-                <div class="bonus-header">
-                    <div class="bonus-icon">
-                        <i class="fas fa-calendar-day"></i>
+    loadBonusesPage() {
+        const page = document.getElementById('page-bonuses');
+        if (!page) return;
+        
+        page.innerHTML = `
+            <div class="bonuses-page">
+                <div class="page-header">
+                    <h1>🎁 Bonuses & Rewards</h1>
+                    <p>Claim your bonuses and boost your balance</p>
+                </div>
+                
+                <div class="bonuses-grid">
+                    <div class="bonus-card large">
+                        <div class="bonus-header">
+                            <i class="fas fa-calendar-day"></i>
+                            <div class="bonus-info">
+                                <h3>Daily Bonus</h3>
+                                <p>Claim every 24 hours</p>
+                            </div>
+                        </div>
+                        <div class="bonus-amount">
+                            <span class="amount">0.1 TON</span>
+                            <span class="hint">+0.01 TON per streak day</span>
+                        </div>
+                        <button class="claim-btn" ${!AppState.isConnected ? 'disabled' : ''}>
+                            ${AppState.isConnected ? 'Claim Now' : 'Connect to Claim'}
+                        </button>
                     </div>
-                    <div class="bonus-info">
-                        <h3>Daily Bonus</h3>
-                        <p>Claim every 24 hours</p>
-                    </div>
-                </div>
-                <div class="bonus-amount">
-                    <span class="amount">0.1 TON</span>
-                    <span class="streak">+0.01 TON per streak day</span>
-                </div>
-                <button class="claim-bonus-btn" ${!AppState.isConnected ? 'disabled' : ''}>
-                    ${AppState.isConnected ? 'Claim Now' : 'Connect Wallet to Claim'}
-                </button>
-                <div class="streak-info">
-                    <span>Current streak: <strong>0 days</strong></span>
-                </div>
-            </div>
-            
-            <div class="bonuses-grid">
-                <div class="bonus-card">
-                    <div class="bonus-card-header">
-                        <div class="bonus-card-icon">
+                    
+                    <div class="bonus-card">
+                        <div class="bonus-icon">
                             <i class="fas fa-user-plus"></i>
                         </div>
-                        <h4>Referral Bonus</h4>
-                    </div>
-                    <div class="bonus-card-body">
-                        <p>Get 0.5 TON for each friend who deposits</p>
+                        <div class="bonus-content">
+                            <h4>Referral Bonus</h4>
+                            <p>0.5 TON per friend</p>
+                        </div>
                         <div class="bonus-status available">Available</div>
                     </div>
-                </div>
-                
-                <div class="bonus-card">
-                    <div class="bonus-card-header">
-                        <div class="bonus-card-icon">
-                            <i class="fas fa-award"></i>
+                    
+                    <div class="bonus-card">
+                        <div class="bonus-icon">
+                            <i class="fas fa-gift"></i>
                         </div>
-                        <h4>Welcome Bonus</h4>
-                    </div>
-                    <div class="bonus-card-body">
-                        <p>0.5 TON on first deposit</p>
+                        <div class="bonus-content">
+                            <h4>Welcome Bonus</h4>
+                            <p>0.5 TON on first deposit</p>
+                        </div>
                         <div class="bonus-status ${AppState.isConnected ? 'claimed' : 'available'}">
                             ${AppState.isConnected ? 'Claimed' : 'Available'}
                         </div>
                     </div>
                 </div>
-                
-                <div class="bonus-card">
-                    <div class="bonus-card-header">
-                        <div class="bonus-card-icon">
-                            <i class="fas fa-level-up-alt"></i>
-                        </div>
-                        <h4>Level Up Bonus</h4>
-                    </div>
-                    <div class="bonus-card-body">
-                        <p>Get rewards for leveling up</p>
-                        <div class="bonus-status available">Available</div>
-                    </div>
-                </div>
-                
-                <div class="bonus-card">
-                    <div class="bonus-card-header">
-                        <div class="bonus-card-icon">
-                            <i class="fas fa-gem"></i>
-                        </div>
-                        <h4>VIP Bonus</h4>
-                    </div>
-                    <div class="bonus-card-body">
-                        <p>Special bonuses for VIP players</p>
-                        <div class="bonus-status locked">Locked</div>
-                    </div>
-                </div>
             </div>
-        </div>
-    `;
-}
-
-function loadLeaderboard() {
-    const page = document.getElementById('page-leaderboard');
-    if (!page) return;
+        `;
+    }
     
-    page.innerHTML = `
-        <div class="leaderboard-container">
-            <div class="leaderboard-header">
-                <h1>🏆 Leaderboard</h1>
-                <div class="period-selector">
-                    <button class="period-btn active">Daily</button>
-                    <button class="period-btn">Weekly</button>
-                    <button class="period-btn">Monthly</button>
-                    <button class="period-btn">All Time</button>
-                </div>
-            </div>
-            
-            <div class="leaderboard-table">
-                <div class="table-header">
-                    <div class="rank-col">Rank</div>
-                    <div class="player-col">Player</div>
-                    <div class="profit-col">Profit</div>
+    loadLeaderboard() {
+        const page = document.getElementById('page-leaderboard');
+        if (!page) return;
+        
+        page.innerHTML = `
+            <div class="leaderboard-page">
+                <div class="page-header">
+                    <h1>🏆 Leaderboard</h1>
+                    <p>Top players this week</p>
                 </div>
                 
-                <div class="table-body">
-                    ${Array.from({length: 10}, (_, i) => `
-                        <div class="table-row ${i === 2 ? 'current-user' : ''}">
-                            <div class="rank-col">
-                                <span class="rank-number">${i + 1}</span>
-                                ${i < 3 ? '<span class="rank-medal">🥇</span>' : ''}
-                            </div>
-                            <div class="player-col">
-                                <div class="player-info">
-                                    <div class="player-avatar">${String.fromCharCode(65 + i)}</div>
-                                    <div class="player-details">
+                <div class="leaderboard-table">
+                    <div class="table-header">
+                        <div class="rank-col">Rank</div>
+                        <div class="player-col">Player</div>
+                        <div class="profit-col">Profit</div>
+                    </div>
+                    
+                    <div class="table-body">
+                        ${Array.from({length: 10}, (_, i) => `
+                            <div class="table-row ${i < 3 ? 'top-three' : ''}">
+                                <div class="rank-col">
+                                    <span class="rank-number">${i + 1}</span>
+                                    ${i < 3 ? '<span class="rank-medal">🏅</span>' : ''}
+                                </div>
+                                <div class="player-col">
+                                    <div class="player-info">
+                                        <div class="player-avatar">${String.fromCharCode(65 + i)}</div>
                                         <div class="player-name">Player${i + 1}</div>
-                                        <div class="player-level">Level ${Math.floor(Math.random() * 10) + 1}</div>
                                     </div>
                                 </div>
+                                <div class="profit-col">
+                                    <span class="profit-value positive">+${(Math.random() * 100).toFixed(2)} TON</span>
+                                </div>
                             </div>
-                            <div class="profit-col">
-                                <span class="profit-value positive">+${(Math.random() * 100).toFixed(2)} TON</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            
-            ${AppState.isConnected ? `
-                <div class="user-position">
-                    <h3>Your Position</h3>
-                    <div class="position-card">
-                        <div class="position-rank">#42</div>
-                        <div class="position-info">
-                            <div class="position-name">${AppState.user?.name}</div>
-                            <div class="position-profit">+15.20 TON</div>
-                        </div>
+                        `).join('')}
                     </div>
                 </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-function loadTransactions() {
-    const page = document.getElementById('page-transactions');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="transactions-container">
-            <div class="transactions-header">
-                <h1>📋 Transactions</h1>
-                <div class="filter-options">
-                    <select class="filter-select">
-                        <option value="all">All Transactions</option>
-                        <option value="deposit">Deposits</option>
-                        <option value="withdraw">Withdrawals</option>
-                        <option value="bet">Bets</option>
-                        <option value="win">Wins</option>
-                        <option value="bonus">Bonuses</option>
-                    </select>
-                </div>
             </div>
-            
-            ${!AppState.isConnected ? `
-                <div class="empty-state">
-                    <i class="fas fa-wallet"></i>
-                    <h3>No transactions yet</h3>
-                    <p>Connect your wallet to see your transaction history</p>
-                    <button class="connect-btn" onclick="openConnectModal()">
-                        Connect Wallet
+        `;
+    }
+    
+    loadComingSoon(page) {
+        const pageElement = document.getElementById(`page-${page}`);
+        if (!pageElement) return;
+        
+        pageElement.innerHTML = `
+            <div class="coming-soon">
+                <div class="coming-soon-content">
+                    <i class="fas fa-rocket"></i>
+                    <h2>Coming Soon</h2>
+                    <p>The ${page} page is under development</p>
+                    <button class="back-btn" onclick="uiManager.loadPage('dashboard')">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Dashboard
                     </button>
                 </div>
-            ` : `
-                <div class="transactions-list">
-                    ${Array.from({length: 5}, (_, i) => {
-                        const types = ['deposit', 'withdraw', 'bet', 'win', 'bonus'];
-                        const type = types[Math.floor(Math.random() * types.length)];
-                        const amounts = [0.5, 1.0, 2.5, 5.0, 10.0];
-                        const amount = amounts[Math.floor(Math.random() * amounts.length)];
-                        const isPositive = ['deposit', 'win', 'bonus'].includes(type);
-                        
-                        return `
-                            <div class="transaction-item">
-                                <div class="transaction-icon ${type}">
-                                    <i class="fas fa-${type === 'deposit' ? 'arrow-down' : type === 'withdraw' ? 'arrow-up' : type === 'bet' ? 'dice' : type === 'win' ? 'trophy' : 'gift'}"></i>
-                                </div>
-                                <div class="transaction-info">
-                                    <div class="transaction-type">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-                                    <div class="transaction-time">${new Date(Date.now() - i * 3600000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                                </div>
-                                <div class="transaction-amount ${isPositive ? 'positive' : 'negative'}">
-                                    ${isPositive ? '+' : '-'}${amount.toFixed(2)} TON
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `}
-        </div>
-    `;
+            </div>
+        `;
+    }
+    
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="${icons[type] || icons.info}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${type.toUpperCase()}</div>
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Close button
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            toast.remove();
+        });
+        
+        // Auto remove
+        setTimeout(() => {
+            toast.style.animation = 'toastSlideIn 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+    
+    toggleTheme() {
+        AppState.theme = AppState.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', AppState.theme);
+        
+        const themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn) {
+            if (AppState.theme === 'dark') {
+                themeBtn.innerHTML = '<i class="fas fa-moon"></i><span>Dark Mode</span>';
+            } else {
+                themeBtn.innerHTML = '<i class="fas fa-sun"></i><span>Light Mode</span>';
+            }
+        }
+        
+        this.showNotification(`Switched to ${AppState.theme} mode`, 'info');
+    }
+    
+    claimBonus() {
+        if (!AppState.isConnected) {
+            this.openConnectModal();
+            return;
+        }
+        
+        this.showNotification('Welcome bonus claimed! +0.5 TON', 'success');
+        // In real app, call backend API
+    }
 }
 
-function loadSupportPage() {
-    const page = document.getElementById('page-support');
-    if (!page) return;
-    
-    page.innerHTML = `
-        <div class="support-container">
-            <div class="support-header">
-                <h1>🛟 Support Center</h1>
-                <p>We're here to help you</p>
-            </div>
-            
-            <div class="support-options">
-                <div class="support-card" onclick="openFAQ()">
-                    <div class="support-icon">
-                        <i class="fas fa-question-circle"></i>
-                    </div>
-                    <h3>FAQ</h3>
-                    <p>Frequently asked questions</p>
-                </div>
-                
-                <div class="support-card" onclick="openTelegramSupport()">
-                    <div class="support-icon">
-                        <i class="fab fa-telegram"></i>
-                    </div>
-                    <h3>Telegram Support</h3>
-                    <p>24/7 live support</p>
-                </div>
-                
-                <div class="support-card" onclick="openEmailSupport()">
-                    <div class="support-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3>Email Support</h3>
-                    <p>support@tonrocket.com</p>
-                </div>
-                
-                <div class="support-card" onclick="openBugReport()">
-                    <div class="support-icon">
-                        <i class="fas fa-bug"></i>
-                    </div>
-                    <h3>Report Bug</h3>
-                    <p>Found an issue? Let us know</p>
-                </div>
-            </div>
-            
-            <div class="contact-form">
-                <h3>Contact Us</h3>
-                <div class="form-group">
-                    <input type="text" placeholder="Your Name" class="form-input">
-                </div>
-                <div class="form-group">
-                    <input type="email" placeholder="Your Email" class="form-input">
-                </div>
-                <div class="form-group">
-                    <textarea placeholder="Your Message" class="form-textarea" rows="4"></textarea>
-                </div>
-                <button class="submit-btn">Send Message</button>
-            </div>
-        </div>
-    `;
-}
-
-// ===== UTILITY FUNCTIONS =====
-function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    document.querySelectorAll('.notification').forEach(n => n.remove());
-    
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    
-    const icons = {
-        success: '✓',
-        error: '✕',
-        warning: '⚠',
-        info: 'ℹ'
-    };
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${icons[type] || icons.info}</span>
-            <span class="notification-text">${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Add styles
-    const style = document.createElement('style');
-    style.textContent = `
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-left: 4px solid;
-            border-radius: var(--radius-md);
-            padding: var(--spacing-md);
-            max-width: 320px;
-            z-index: 3000;
-            animation: notificationSlideIn 0.3s ease;
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .notification.success {
-            border-left-color: var(--success);
-        }
-        
-        .notification.error {
-            border-left-color: var(--danger);
-        }
-        
-        .notification.warning {
-            border-left-color: var(--warning);
-        }
-        
-        .notification.info {
-            border-left-color: var(--info);
-        }
-        
-        .notification-content {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-        
-        .notification-icon {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .notification.success .notification-icon {
-            color: var(--success);
-        }
-        
-        .notification.error .notification-icon {
-            color: var(--danger);
-        }
-        
-        .notification.warning .notification-icon {
-            color: var(--warning);
-        }
-        
-        .notification.info .notification-icon {
-            color: var(--info);
-        }
-        
-        .notification-text {
-            flex: 1;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-        
-        @keyframes notificationSlideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes notificationSlideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        notification.style.animation = 'notificationSlideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
+// ===== HELPER FUNCTIONS =====
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
-        .then(() => showNotification('Copied to clipboard!', 'success'))
-        .catch(err => showNotification('Failed to copy', 'error'));
+        .then(() => uiManager.showNotification('Copied to clipboard!', 'success'))
+        .catch(err => uiManager.showNotification('Failed to copy', 'error'));
 }
 
-function shareToTelegram(code) {
-    const text = `Join me on TON Rocket Casino! Use my referral code: ${code} to get bonus!`;
-    const url = `https://t.me/share/url?url=${encodeURIComponent('https://tonrocket.com')}&text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-    showNotification('Opening Telegram...', 'info');
-}
-
-function shareToTwitter(code) {
-    const text = `Join me on @TONRocket Casino! Use code: ${code} for bonus! 🚀 #TON #CryptoCasino`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-    showNotification('Opening Twitter...', 'info');
-}
-
-function shareToWhatsApp(code) {
-    const text = `Join me on TON Rocket Casino! Use my referral code: ${code} to get bonus!`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-    showNotification('Opening WhatsApp...', 'info');
-}
-
-function claimWelcomeBonus() {
-    if (!AppState.isConnected) {
-        openConnectModal();
-        return;
-    }
-    
-    showNotification('Welcome bonus claimed! +0.5 TON', 'success');
-    // In real app, this would call backend API
-}
-
-// ===== EVENT LISTENERS =====
-function setupEventListeners() {
-    // Connect Wallet Button
-    document.getElementById('connect-wallet-btn')?.addEventListener('click', openConnectModal);
-    
-    // Disconnect Button
-    document.getElementById('disconnect-btn')?.addEventListener('click', () => {
-        tonConnectIntegration.disconnectWallet();
-    });
-    
-    // Close Modal Buttons
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', closeConnectModal);
-    });
-    
-    // Modal Overlay
-    document.querySelector('.modal-overlay')?.addEventListener('click', closeConnectModal);
-    
-    // Menu Button
-    document.getElementById('menu-btn')?.addEventListener('click', () => {
-        document.getElementById('sidebar').classList.add('active');
-    });
-    
-    // Close Sidebar
-    document.querySelectorAll('.close-sidebar').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('sidebar').classList.remove('active');
-        });
-    });
-    
-    // Navigation Items
-    document.querySelectorAll('.menu-item, .nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = item.dataset.page;
-            if (page) {
-                navigateTo(page);
-            }
-        });
-    });
-    
-    // Language Selector
-    document.querySelectorAll('.lang-option').forEach(option => {
-        option.addEventListener('click', (e) => {
-            const lang = option.dataset.lang;
-            AppState.language = lang;
-            showNotification(`Language changed to ${lang.toUpperCase()}`, 'info');
-            // Update language in UI
-        });
-    });
-    
-    // View All Wallets Button
-    document.getElementById('view-all-btn')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        // In a real app, this would show more wallets
-        showNotification('Showing all available wallets', 'info');
-    });
-}
+// ===== GLOBAL EXPORTS =====
+window.uiManager = new UIManager();
+window.copyToClipboard = copyToClipboard;
 
 // ===== INITIALIZATION =====
-const walletIntegration = new WalletIntegration();
-const tonConnectIntegration = new TONConnectIntegration();
+document.addEventListener('DOMContentLoaded', () => {
+    uiManager.initialize();
+});
 
-async function initializeApp() {
-    console.log('Initializing TON Rocket Casino...');
-    
-    try {
-        // Hide loader after 1 second minimum
-        setTimeout(hideLoader, 1000);
-        
-        // Detect installed wallets
-        await walletIntegration.detectInstalledWallets();
-        
-        // Get available wallets
-        AppState.wallets = await walletIntegration.getAvailableWallets();
-        
-        // Initialize TON Connect
-        await tonConnectIntegration.initialize();
-        
-        // Load saved connection state
-        const savedState = tonConnectIntegration.loadConnectionState();
-        if (savedState && !AppState.isConnected) {
-            // Try to restore connection
-            console.log('Restoring saved connection state...');
-        }
-        
-        // Setup event listeners
-        setupEventListeners();
-        
-        // Update UI
-        updateUserDisplay();
-        updateWalletsGrid();
-        
-        // Load initial page
-        navigateTo('dashboard');
-        
-        // Update header stats
-        document.getElementById('online-count').textContent = CONFIG.DEMO_ONLINE_COUNT.toLocaleString();
-        document.getElementById('daily-volume').textContent = `${CONFIG.DEMO_DAILY_VOLUME.toLocaleString()} TON`;
-        
-        console.log('App initialized successfully');
-        
-    } catch (error) {
-        console.error('App initialization failed:', error);
-        showNotification('Failed to initialize app', 'error');
-    }
-}
-
-function hideLoader() {
-    const loader = document.getElementById('loader');
-    const app = document.getElementById('app');
-    
-    if (loader) loader.classList.add('hidden');
-    if (app) app.classList.remove('hidden');
-}
-
-// ===== START APP =====
-document.addEventListener('DOMContentLoaded', initializeApp);
-
-// Export to global scope for HTML onclick handlers
-window.navigateTo = navigateTo;
-window.openConnectModal = openConnectModal;
-window.closeConnectModal = closeConnectModal;
-window.copyToClipboard = copyToClipboard;
-window.shareToTelegram = shareToTelegram;
-window.shareToTwitter = shareToTwitter;
-window.shareToWhatsApp = shareToWhatsApp;
-window.claimWelcomeBonus = claimWelcomeBonus;
+// Add theme attribute
+document.documentElement.setAttribute('data-theme', 'dark');
